@@ -147,6 +147,15 @@
         width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace;
         font-size: 12px; line-height: 1.5; margin-top: 6px;
       }
+      /* Manual Firebase entry: the collapsed fallback when pasting the
+         whole snippet fails on a phone keyboard / in-app browser. */
+      .fb-manual-error {
+        display: none; color: var(--red); background: var(--red-bg);
+        border-radius: 12px; padding: 10px 12px; margin-top: 12px;
+        font-size: 14.5px; font-weight: 600; line-height: 1.45;
+      }
+      .fb-manual-error.show { display: block; }
+      input.fb-invalid { border-color: var(--red) !important; box-shadow: 0 0 0 4px var(--red-bg) !important; }
       .sub { color: var(--muted); font-size: 14.5px; line-height: 1.45; }
       /* Display type: tight leading, negative tracking as size grows */
       .class-name { font-size: 29px; font-weight: 700; line-height: 1.1; letter-spacing: -0.024em; margin: 0; }
@@ -516,7 +525,8 @@
       .ms-btn small { display: block; width: 100%; font-size: 12.5px; font-weight: 600; opacity: .85; text-align: center; }
       .ms-btn:active { transform: scale(.97); }
       .ms-btn.on { background: var(--accent); color: var(--on-accent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 6px 18px rgba(10, 110, 87, .25); }
-      .ms-ico { font-size: 20px; line-height: 1; }
+      .ms-ico { display: inline-flex; vertical-align: -3px; margin-right: 3px; line-height: 1; }
+      .ms-ico svg { display: block; }
       body.setup-mode .wrap { max-width: 1080px; }
 
       /* ——— Projector roster grid ———
@@ -663,8 +673,8 @@
         </div>
 
         <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/></svg></span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
 
         <div class="display-head">
@@ -774,8 +784,8 @@
         </div>
 
         <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/></svg></span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
         <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập danh sách ở <b>Settings</b>, bấm <b>Live Observation</b> để chiếu lưới lớp.</p>
 
@@ -813,6 +823,30 @@
             <button class="btn primary" id="btnFbConnect" type="button">Kết nối Firebase</button>
             <button class="btn" id="btnFbDisconnect" type="button">Ngắt kết nối</button>
           </div>
+          <details id="fbManualDetails">
+            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:10px 0 4px;">Điền tay 6 giá trị (khi dán không được) — bấm để mở</summary>
+            <p class="sub" style="margin-top:4px;">Điền <b>từng dòng một</b>: mỗi ô chỉ điền phần <b>bên trong dấu ngoặc kép</b> của dòng tương ứng trong đoạn firebaseConfig (không cần gõ dấu ngoặc kép). Nếu lỡ dán cả dấu <b>&quot;</b> hoặc dấu <b>,</b> ở cuối, app tự bỏ. Ba ô <b>apiKey, projectId, appId</b> là bắt buộc.</p>
+            <label class="f" for="fbApiKey">apiKey *</label>
+            <input type="text" id="fbApiKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="AIza…" />
+            <label class="f" for="fbAuthDomain">authDomain</label>
+            <input type="text" id="fbAuthDomain" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your-project.firebaseapp.com" />
+            <label class="f" for="fbProjectId">projectId *</label>
+            <input type="text" id="fbProjectId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your-project-id" />
+            <label class="f" for="fbStorageBucket">storageBucket</label>
+            <input type="text" id="fbStorageBucket" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your-project.firebasestorage.app" />
+            <label class="f" for="fbMessagingSenderId">messagingSenderId</label>
+            <input type="text" id="fbMessagingSenderId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="752287916403" />
+            <label class="f" for="fbAppId">appId *</label>
+            <input type="text" id="fbAppId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="1:…:web:…" />
+            <p class="fb-manual-error" id="fbManualError" role="alert"></p>
+            <div class="btnrow">
+              <button class="btn primary block" id="btnFbConnectManual" type="button">Kết nối bằng 6 giá trị này</button>
+            </div>
+            <div class="btnrow">
+              <button class="btn block" id="btnFbFillKnown" type="button">Điền sẵn cấu hình qr-att-73f4b vào 6 ô</button>
+            </div>
+            <p class="sub" style="margin-top:8px;">Nút “Điền sẵn” chỉ điền đúng 6 giá trị của project <b>qr-att-73f4b</b> vào các ô để bạn kiểm tra lại, xong vẫn phải bấm <b>“Kết nối bằng 6 giá trị này”</b> ở trên.</p>
+          </details>
           <details>
             <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Firestore Rules (để đối chiếu khi cần)</summary>
             <textarea class="fb-rules" id="fbRules" readonly rows="9">rules_version = '2';
@@ -920,8 +954,8 @@ function reply(obj) {
         </div>
 
         <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/></svg></span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
 
         <div class="card">
@@ -1163,8 +1197,56 @@ function reply(obj) {
       /* One paste box is the whole Firebase form: the snippet the
          teacher copies from the console is kept in the box, and the
          Connect button extracts the six values from it on the spot. */
+      var FB_FIELD_IDS = {
+        apiKey: "fbApiKey", authDomain: "fbAuthDomain", projectId: "fbProjectId",
+        storageBucket: "fbStorageBucket", messagingSenderId: "fbMessagingSenderId", appId: "fbAppId"
+      };
+      var FB_KEYS = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+      function fillFbManualFields(cfg) {
+        if (!cfg) return;
+        FB_KEYS.forEach(function (k) {
+          var el = $(FB_FIELD_IDS[k]);
+          if (el) { el.value = cfg[k] || ""; el.classList.remove("fb-invalid"); }
+        });
+        var err = $("fbManualError");
+        if (err) { err.textContent = ""; err.classList.remove("show"); }
+      }
       function showFbConfig(cfg) {
         $("fbPaste").value = "const firebaseConfig = " + JSON.stringify(cfg, null, 2) + ";";
+        fillFbManualFields(cfg);
+      }
+      /* Manual entry must forgive phone keyboards: strip surrounding
+         straight/curly quotes and a trailing comma the teacher may
+         have copied along with the value. If a whole config line was
+         pasted into one field, take the quoted part out of it. */
+      function cleanFbValue(raw) {
+        var v = String(raw == null ? "" : raw).trim();
+        var q = v.match(/["“]([^"”]+)["”]/);
+        if (q) v = q[1];
+        else v = v.replace(/^["'‘’\s]+/, "").replace(/["'‘’\s,;]+$/, "");
+        return v.trim();
+      }
+      function configFromManualFields() {
+        var cfg = {};
+        FB_KEYS.forEach(function (k) {
+          var el = $(FB_FIELD_IDS[k]);
+          cfg[k] = el ? cleanFbValue(el.value) : "";
+        });
+        return cfg;
+      }
+      function showFbManualError(missing) {
+        var err = $("fbManualError");
+        if (err) {
+          err.textContent = "Chưa điền đủ — còn thiếu: " + missing.join(", ") +
+            ". Ba ô bắt buộc là apiKey, projectId và appId. Điền đủ rồi bấm “Kết nối bằng 6 giá trị này” lại.";
+          err.classList.add("show");
+        }
+        FB_KEYS.forEach(function (k) {
+          var el = $(FB_FIELD_IDS[k]);
+          if (el) el.classList.toggle("fb-invalid", missing.indexOf(k) >= 0);
+        });
+        var first = $(FB_FIELD_IDS[missing[0]]);
+        if (first) first.focus();
       }
       function parseFbConfig(text) {
         var keys = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
@@ -1210,6 +1292,7 @@ function reply(obj) {
         }
         fbCfg = cfg;
         try { localStorage.setItem(LS_CFG, JSON.stringify(cfg)); } catch (e) {}
+        fillFbManualFields(cfg);
         setFbStatus();
         // Pull cloud data; upload anything that only exists locally.
         var localIds = {};
@@ -2586,6 +2669,32 @@ function reply(obj) {
           connectFirebase(cfg, false);
         });
         $("btnFbDisconnect").addEventListener("click", disconnectFirebase);
+        /* Manual 6-field entry: the fallback when pasting the whole
+           snippet fails on the phone. Reads the fields directly — no
+           parsing of a pasted block involved. */
+        $("btnFbConnectManual").addEventListener("click", function () {
+          var cfg = configFromManualFields();
+          var missing = [];
+          ["apiKey", "projectId", "appId"].forEach(function (k) { if (!cfg[k]) missing.push(k); });
+          if (missing.length) {
+            showFbManualError(missing);
+            toast("Chưa điền đủ 3 ô bắt buộc: apiKey, projectId, appId.", true);
+            return;
+          }
+          var err = $("fbManualError");
+          if (err) { err.textContent = ""; err.classList.remove("show"); }
+          /* Keep the paste box in sync so both paths show one config. */
+          $("fbPaste").value = "const firebaseConfig = " + JSON.stringify(cfg, null, 2) + ";";
+          connectFirebase(cfg, false);
+        });
+        $("btnFbFillKnown").addEventListener("click", function () {
+          fillFbManualFields(FB_PREFILL);
+          toast("Đã điền sẵn 6 giá trị của project qr-att-73f4b — kiểm tra lại rồi bấm “Kết nối bằng 6 giá trị này”.");
+        });
+        FB_KEYS.forEach(function (k) {
+          var el = $(FB_FIELD_IDS[k]);
+          if (el) el.addEventListener("input", function () { el.classList.remove("fb-invalid"); });
+        });
 
         $("classSelect").addEventListener("change", function () {
           state.selectedClassId = this.value || null;
