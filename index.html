@@ -140,6 +140,32 @@
       }
       .card h2 { margin: 0 0 4px; font-size: 21px; font-weight: 700; letter-spacing: -0.018em; line-height: 1.2; }
       .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.012em; }
+      /* GAS must be impossible to miss: a bordered, tinted block inside
+         the Sheet card, plus a jump card at the very top of Set Up. */
+      .gas-box {
+        border: 2px solid var(--accent); background: var(--accent-soft);
+        border-radius: 16px; padding: 16px; margin-top: 16px;
+        scroll-margin-top: 92px;
+      }
+      #cardFirebase, #cardSheet { scroll-margin-top: 76px; }
+      .gas-box h3 { font-size: 19px; margin: 0 0 6px; }
+      .gas-box.flash { animation: gas-flash 1.6s var(--ease-out) 2; }
+      @keyframes gas-flash {
+        0%, 100% { box-shadow: 0 0 0 0 transparent; }
+        35% { box-shadow: 0 0 0 6px var(--accent-soft), 0 0 0 8px var(--accent); }
+      }
+      @media (prefers-reduced-motion: reduce) { .gas-box.flash { animation: none; } }
+      .setup-jump {
+        border: 2px solid var(--accent); background: var(--surface);
+        border-radius: var(--radius); box-shadow: var(--shadow-card);
+        padding: 18px 20px; margin-top: 16px;
+      }
+      .setup-jump h3 { margin: 0 0 6px; font-size: 18px; }
+      .setup-jump ol { margin: 8px 0 4px; padding-left: 22px; line-height: 1.65; font-size: 15px; }
+      .fb-rules {
+        width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12px; line-height: 1.5; margin-top: 6px;
+      }
       .sub { color: var(--muted); font-size: 14.5px; line-height: 1.45; }
       /* Display type: tight leading, negative tracking as size grows */
       .class-name { font-size: 29px; font-weight: 700; line-height: 1.1; letter-spacing: -0.024em; margin: 0; }
@@ -643,6 +669,9 @@
             Set Up
           </button>
         </div>
+        <div class="btnrow">
+          <button class="btn primary block" id="btnHomeGas" type="button" style="padding:14px;">⭐ Mã GAS (Google Apps Script) — bấm để tới thẳng mã dán vào Sheet</button>
+        </div>
         <p class="sub" style="margin:10px 2px 0;">On a laptop, use the big <b>Setup ⇄ Hiển thị</b> switch above: type the roster in Setup, then flip to Hiển thị for the projector. The whole class is shown as a grid — a scanned student's cell turns <b>green</b> (late = <b>yellow</b>, with late10 / late20 / late&gt;20 under the name), and after you tap <b>Done</b> everyone not scanned turns <b>red · off</b>. It syncs in real time through Firebase (connect it once in Set Up); on this device alone it follows scans made here.</p>
       </section>
 
@@ -772,6 +801,23 @@
         </div>
         <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập và sửa danh sách lớp ở chế độ <b>Setup</b> cho nhanh bằng bàn phím, xong bấm <b>Hiển thị</b> ở thanh trên để chuyển ngay sang lưới chiếu — bấm qua lại bất cứ lúc nào, không mất dữ liệu đang nhập dở trong lớp đã lưu.</p>
 
+        <div class="setup-jump" id="setupJump">
+          <h3>Bạn đang tìm GAS? — GAS ở ngay đây 👇</h3>
+          <p class="sub" style="margin:0;">GAS là <b>Google Apps Script</b> — đoạn mã dán <b>vào trong file Google Sheet của bạn</b> (không dán vào Firebase, không có file riêng ngoài app). Trước đây mã này bị gấp kín ở gần cuối trang nên rất khó thấy; nay mã <b>hiện sẵn</b> trong thẻ “Google Sheet + GAS” bên dưới.</p>
+          <ol>
+            <li><b>Firebase:</b> dán cấu hình + dán Rules cho project <b>qr-att-73f4b</b> — nếu bạn đã Publish Rules rồi thì bước này xong.</li>
+            <li><b>GAS:</b> bấm nút xanh bên dưới để đi thẳng tới mã, bấm <b>Sao chép mã GAS</b>, rồi vào Sheet → <b>Extensions → Apps Script</b> → dán → Save → Deploy → Web app.</li>
+            <li><b>Quay lại app:</b> dán link Sheet + link Web App (…/exec) vào ô dưới mã GAS và bấm Lưu.</li>
+          </ol>
+          <div class="btnrow">
+            <button class="btn primary block" id="btnGotoGas" type="button">⬇ Đi thẳng tới mã GAS — sao chép ngay</button>
+          </div>
+          <div class="btnrow">
+            <button class="btn" id="btnGotoFirebase" type="button">Tới mục Firebase / Rules</button>
+            <button class="btn" id="btnDownloadGasTop" type="button">Tải mã GAS (file Code.gs)</button>
+          </div>
+        </div>
+
         <h3 style="margin:14px 0 10px; font-size:16px;">Các lớp của bạn</h3>
         <div id="classList"></div>
         <p class="empty" id="classListEmpty">Chưa có lớp nào. Thêm lớp đầu tiên ở bên dưới.</p>
@@ -802,7 +848,7 @@
           <div class="btnrow"><button class="btn primary block" id="btnSetupDisplay" type="button">Mở màn hình chiếu</button></div>
         </div>
 
-        <div class="card">
+        <div class="card" id="cardFirebase">
           <h3>Firebase — lưu trữ đám mây</h3>
           <p class="sub" id="fbStatus" style="margin-top:0;">Trạng thái: Chế độ lưu trên máy — dữ liệu chỉ lưu trên thiết bị này.</p>
           <p class="sub">Hãy tạo một <b>project Firebase mới, riêng</b> cho app điểm danh này. Cách tạo:</p>
@@ -828,10 +874,23 @@
             <button class="btn primary" id="btnFbConnect" type="button">Kết nối Firebase</button>
             <button class="btn" id="btnFbDisconnect" type="button">Dùng chế độ lưu trên máy</button>
           </div>
+          <p class="sub" style="margin-top:14px; background:var(--accent-soft); border-radius:12px; padding:10px 12px;"><b>Rules:</b> nếu bạn đã dán Rules và bấm <b>Publish</b> cho project <b>qr-att-73f4b</b> (Firestore Database → Rules) thì bước Rules đã xong — không cần làm lại. Đoạn Rules app đang dùng để đối chiếu nằm ngay bên dưới; hãy chắc chắn <b>projectId ở trên đúng là qr-att-73f4b</b> rồi bấm Kết nối Firebase.</p>
+          <details open>
+            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Firestore Rules — đoạn đã dán vào Firebase (để đối chiếu)</summary>
+            <textarea class="fb-rules" id="fbRules" readonly rows="9">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</textarea>
+            <div class="btnrow"><button class="btn" id="btnCopyRules" type="button">Sao chép Rules</button></div>
+          </details>
         </div>
 
-        <div class="card">
-          <h3>Google Sheet — sổ điểm danh</h3>
+        <div class="card" id="cardSheet">
+          <h3>Google Sheet + GAS — sổ điểm danh</h3>
           <p class="sub" id="gsStatus" style="margin-top:0;">Trạng thái: Chưa cài đặt — nút “Push to Google Sheet” sẽ sao chép danh sách để bạn dán tay.</p>
           <p class="sub">Tạo <b>một file Google Sheet</b> với <b>mỗi lớp một tab</b>. Đặt tên tab <b>trùng đúng tên lớp</b> trong app, và trong tab liệt kê sinh viên — một cột Họ tên, cột kế tiếp là Mã số sinh viên. Khi bạn bấm <b>Push to Google Sheet</b> ở màn hình chính, app ghi điểm danh hôm nay của lớp đang chọn vào đúng tab của lớp đó thành <b>một cột mới</b>, ngay cạnh cột gần nhất: ô trên cùng là ngày học, bên dưới là ký hiệu của từng sinh viên, đối chiếu theo Mã số sinh viên. Các cột cũ không bị thay đổi.</p>
           <p class="sub" style="background:var(--accent-soft); border-radius:12px; padding:10px 12px;"><b>Đẩy ngay khi quét:</b> sau khi đã cài Apps Script ở dưới, mỗi lần camera bắt được mã QR, app <b>tự đẩy ngay sinh viên đó lên Sheet</b> — không cần bấm Push cuối buổi. Lần quét đầu tiên trong ngày sẽ tự tạo cột của ngày hôm đó (mặc định các sinh viên còn lại là <b>off</b>), các lần quét sau ghi đè đúng ô của sinh viên vừa quét (đi học = để trống, đi trễ = late10 / late20 / late&gt;20). Trên màn hình camera sẽ hiện dòng “✓ Pushed to Google Sheet” để bạn biết đã ghi thành công; nếu chưa cài Apps Script, app vẫn lưu điểm danh trong máy và báo rõ là chưa đẩy được. Nút Push ở màn hình chính vẫn còn để đẩy lại cả buổi khi cần.</p>
@@ -845,8 +904,15 @@
             <li>Dán URL đó vào ô bên dưới và bấm <b>Lưu cài đặt Google Sheet</b>.</li>
             <li><b>Đã cài bản cũ trước đây?</b> Hãy thay toàn bộ mã bằng bản mới ở dưới (bản mới mới nhận được lệnh đẩy ngay khi quét), rồi bấm <b>Deploy → Manage deployments → sửa (bút chì) → Version: New version → Deploy</b> để giữ nguyên URL cũ.</li>
           </ol>
-          <details>
-            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Mã Apps Script — dán đoạn mã này vào Sheet của bạn</summary>
+          <div class="gas-box" id="gasBox">
+            <h3>⭐ GAS — Mã Google Apps Script ở ĐÂY</h3>
+            <p class="sub" style="margin:0 0 4px;">Đây chính là GAS bạn đang tìm. <b>Không có file GAS riêng ở nơi khác</b> — toàn bộ mã nằm trong ô bên dưới. Bấm <b>Sao chép mã GAS</b> (hoặc tải file Code.gs), rồi dán vào <b>Sheet của bạn → Extensions → Apps Script</b>.</p>
+            <div class="btnrow">
+              <button class="btn primary" id="btnCopyCodeTop" type="button">📋 Sao chép mã GAS</button>
+              <button class="btn" id="btnDownloadGas" type="button">Tải mã GAS (file Code.gs)</button>
+            </div>
+          <details open id="gasDetails">
+            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">GAS — Mã Google Apps Script (đang hiện sẵn — bấm để thu gọn / mở ra)</summary>
             <textarea id="gsCode" readonly rows="16" style="font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; line-height:1.5; margin-top:6px;">function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
@@ -907,7 +973,8 @@ function reply(obj) {
 }</textarea>
             <div class="btnrow"><button class="btn" id="btnCopyCode" type="button">Sao chép mã Apps Script</button></div>
           </details>
-          <label class="f" for="gsWebApp">Link Web App của Apps Script</label>
+          </div>
+          <label class="f" for="gsWebApp">Link Web App của Apps Script (sau khi Deploy GAS xong, dán link …/exec vào đây)</label>
           <input type="text" id="gsWebApp" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" />
           <div class="btnrow"><button class="btn primary block" id="btnGsSave" type="button">Lưu cài đặt Google Sheet</button></div>
         </div>
@@ -1524,6 +1591,36 @@ function reply(obj) {
       function switchMode(mode) {
         if (mode === "display") openDisplay();
         else { renderSetup(); show("setup"); }
+      }
+      /* GAS discoverability: jump straight to the Apps Script code,
+         force its <details> open, scroll it into view and flash it —
+         the teacher should never have to hunt for it again. */
+      function gotoGas() {
+        if (currentView !== "setup") { renderSetup(); show("setup"); }
+        var details = $("gasDetails"); if (details) details.open = true;
+        var box = $("gasBox"); if (!box) return;
+        setTimeout(function () {
+          box.scrollIntoView({ behavior: "smooth", block: "start" });
+          box.classList.remove("flash"); void box.offsetWidth; box.classList.add("flash");
+        }, 80);
+      }
+      function gotoFirebase() {
+        if (currentView !== "setup") { renderSetup(); show("setup"); }
+        var card = $("cardFirebase"); if (!card) return;
+        setTimeout(function () { card.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80);
+      }
+      function downloadGas() {
+        var code = $("gsCode") ? $("gsCode").value : "";
+        if (!code) { toast("Không tìm thấy mã GAS trong app.", true); return; }
+        try {
+          var blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url; a.download = "Code.gs";
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 800);
+          toast("Đã tải file Code.gs — mở file, sao chép toàn bộ và dán vào Extensions → Apps Script trong Sheet của bạn.");
+        } catch (e) { toast("Tải file thất bại — hãy dùng nút Sao chép mã GAS.", true); }
       }
 
       /* ---------- Home ---------- */
@@ -2525,6 +2622,17 @@ function reply(obj) {
         $("btnCopyCode").addEventListener("click", function () {
           copyText($("gsCode").value, "Đã sao chép mã Apps Script — dán vào Extensions → Apps Script trong Sheet của bạn.");
         });
+        $("btnCopyCodeTop").addEventListener("click", function () {
+          copyText($("gsCode").value, "Đã sao chép mã GAS — dán vào Sheet → Extensions → Apps Script, rồi Save và Deploy → Web app.");
+        });
+        $("btnCopyRules").addEventListener("click", function () {
+          copyText($("fbRules").value, "Đã sao chép Firestore Rules — dán vào Firebase → Firestore Database → Rules → Publish.");
+        });
+        $("btnDownloadGas").addEventListener("click", downloadGas);
+        $("btnDownloadGasTop").addEventListener("click", downloadGas);
+        $("btnGotoGas").addEventListener("click", gotoGas);
+        $("btnHomeGas").addEventListener("click", gotoGas);
+        $("btnGotoFirebase").addEventListener("click", gotoFirebase);
         $("btnCsv").addEventListener("click", exportCSV);
 
         $("scanBack").addEventListener("click", function () {
