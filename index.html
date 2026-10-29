@@ -153,10 +153,32 @@
       .class-subject { font-size: 16px; font-weight: 500; color: var(--muted); margin: 3px 0 0; }
       .class-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 13.5px; margin-top: 8px; }
 
-      /* Today's class: monogram + name on one line */
-      .today-head { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
-      .today-head > div { min-width: 0; }
-      .today-kicker { margin: 0 0 2px; font-size: 13px; color: var(--muted); font-weight: 500; }
+      /* Class picker: the face shows which class is selected (monogram,
+         name, subject); the real <select> sits invisibly on top so the
+         native picker opens on tap and keyboard/screen-reader use works. */
+      .picker {
+        position: relative; margin-bottom: 12px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      }
+      .picker:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      .picker-face { display: flex; align-items: center; gap: 14px; padding: 12px 16px 12px 12px; min-height: 76px; pointer-events: none; }
+      .pf-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+      .pf-kicker { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+      .pf-name { font-size: 20px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; }
+      .pf-sub { font-size: 14px; color: var(--muted); }
+      .pf-chev { color: var(--muted); flex: 0 0 auto; }
+      .picker select {
+        position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0;
+        border: 0; padding: 0; cursor: pointer; font-size: 16px;
+      }
+      .mono.sm { width: 26px; height: 26px; font-size: 11px; margin-right: 8px; vertical-align: middle; }
+      #scanSub { display: flex; align-items: center; }
+
+      /* Class progress: how much of the class is in (green) and late (amber) */
+      .pbar { display: flex; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 16px; }
+      .pbar i { display: block; height: 100%; transition: width .5s var(--spring); }
+      .pbar .p { background: var(--green); }
+      .pbar .l { background: #d9a21b; }
 
       /* Class identity: initials on a pale tint of the class's own hue
          (--h, set per class). Identity, not data — it stays pale. */
@@ -229,7 +251,7 @@
       .btnrow .btn { flex: 1 1 30%; }
 
       /* ——— Counts: the numbers carry the colour ——— */
-      .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+      .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
       .stat { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 16px; padding: 12px 4px 10px; text-align: center; }
       .stat b { display: block; font-size: 24px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
       .stat span { font-size: 12.5px; color: var(--muted); font-weight: 500; }
@@ -252,7 +274,7 @@
       }
       .backbtn {
         border: 0; background: none; color: var(--accent-strong); font-weight: 600; font-size: 16px;
-        padding: 8px 6px 8px 0; margin-left: -2px; border-radius: 10px;
+        padding: 8px 6px 8px 0; margin-left: -2px; border-radius: 10px; min-height: 44px;
         transition: transform 100ms ease-out, opacity .2s;
       }
       .backbtn:active { transform: scale(.94); opacity: .6; }
@@ -324,7 +346,7 @@
       .days { display: flex; flex-wrap: wrap; gap: 8px; }
       .days button {
         border: 1px solid var(--line); background: var(--surface-solid); color: var(--ink); border-radius: 999px;
-        padding: 8px 15px; font-weight: 600; font-size: 14.5px; min-height: 42px;
+        padding: 8px 15px; font-weight: 600; font-size: 14.5px; min-height: 44px;
         transition: transform 100ms ease-out, background .2s, color .2s;
       }
       .days button:active { transform: scale(.94); }
@@ -336,7 +358,7 @@
       .stu b { font-size: 15px; font-weight: 600; }
       .stu .meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
       .iconbtn {
-        border: 0; background: none; color: var(--red); font-weight: 600; padding: 6px 8px; font-size: 14px;
+        border: 0; background: none; color: var(--red); font-weight: 600; padding: 6px 10px; font-size: 14px; min-height: 44px;
         border-radius: 8px; transition: transform 100ms ease-out, opacity .2s;
       }
       .iconbtn:active { transform: scale(.92); opacity: .6; }
@@ -571,6 +593,11 @@
           <div><h1 class="brand-name">Điểm danh QR</h1><p class="dateline" id="dateline">—</p></div>
         </header>
 
+        <div class="picker" id="classPicker">
+          <div class="picker-face" id="pickerFace" aria-hidden="true"></div>
+          <select id="classSelect" aria-label="Class"></select>
+        </div>
+
         <button class="scan-cta" id="btnScan" type="button">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4" rx=".5"/><rect x="13" y="7" width="4" height="4" rx=".5"/><rect x="7" y="13" width="4" height="4" rx=".5"/><path d="M13 13h2v2h-2zM17 15h2v2h-2zM15 17h2v2h-2z"/></svg>
           Open Camera to scan
@@ -579,8 +606,6 @@
 
         <div class="card" id="todayCard">
           <div id="todayBody"></div>
-          <label class="f" for="classSelect">Class</label>
-          <select id="classSelect"></select>
 
           <div class="seg" role="group" aria-label="Scan mode">
             <span class="seg-thumb" id="segThumb" aria-hidden="true"></span>
@@ -595,6 +620,7 @@
           </div>
           <p class="mode-note" id="modeNote"></p>
 
+          <div class="pbar" id="pbar" role="img" aria-label="Class progress"><i class="p" id="pbPresent"></i><i class="l" id="pbLate"></i></div>
           <div class="stats" id="statsRow">
             <div class="stat s-present"><b id="stPresent">0</b><span>Present</span></div>
             <div class="stat s-late"><b id="stLate">0</b><span>Late</span></div>
@@ -1786,18 +1812,18 @@ function reply(obj) {
         var cls = selectedClass();
         var body = $("todayBody");
         if (!cls) {
-          body.innerHTML = '<p class="class-name">No class set up yet</p>' +
-            '<p class="sub">Open <b>Settings</b> to create your classes and add students. Classes scheduled for today will appear here automatically.</p>';
+          body.innerHTML = '<p class="sub" style="margin:0;">Open <b>Settings</b> to create your classes and add students. Classes scheduled for today will appear here automatically.</p>';
+          $("pickerFace").innerHTML = '<span class="mono lg" aria-hidden="true">?</span><div class="pf-text"><span class="pf-kicker">No class yet</span><b class="pf-name">Create a class in Settings</b></div>';
         } else {
           var isToday = classesToday().indexOf(cls) >= 0;
           var daysTxt = cls.days.slice().sort(function (a, b) { return DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b); })
             .map(function (d) { return DAY_NAMES[d]; }).join(", ");
-          body.innerHTML =
-            '<div class="today-head">' + monoHtml(cls, true) + '<div>' +
-            '<p class="today-kicker">' + (isToday ? "Today's class" : "Selected class (not scheduled today)") + '</p>' +
-            '<p class="class-name">' + esc(cls.name) + '</p>' +
-            '<p class="class-subject">' + esc(cls.subject) + '</p></div></div>' +
-            '<div class="class-meta"><span>Starts ' + esc(cls.start) + '</span><span>' + esc(daysTxt) + '</span><span>' + cls.students.length + ' students</span></div>';
+          $("pickerFace").innerHTML = monoHtml(cls, true) + '<div class="pf-text">' +
+            '<span class="pf-kicker">' + (isToday ? "Today's class" : "Not scheduled today") + '</span>' +
+            '<b class="pf-name">' + esc(cls.name) + '</b>' +
+            '<span class="pf-sub">' + esc(cls.subject) + '</span></div>' +
+            '<svg class="pf-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+          body.innerHTML = '<div class="class-meta" style="margin:0 0 4px;"><span>Starts ' + esc(cls.start) + '</span><span>' + esc(daysTxt) + '</span><span>' + cls.students.length + ' students</span></div>';
           if (!state.modeManual) state.mode = autoMode(cls);
         }
         renderMode();
@@ -1839,6 +1865,10 @@ function reply(obj) {
         $("stLate").textContent = s.late;
         $("stAbsent").textContent = s.absent;
         $("stTotal").textContent = s.total;
+        var pct = function (n) { return s.total ? (n / s.total * 100) : 0; };
+        $("pbPresent").style.width = pct(s.present) + "%";
+        $("pbLate").style.width = pct(s.late) + "%";
+        $("pbar").setAttribute("aria-label", s.present + " present, " + s.late + " late of " + s.total);
       }
 
       /* ---------- Projector display ----------
@@ -2291,7 +2321,7 @@ function reply(obj) {
         renderScanLog();
         initScanAudio(); /* this tap is the user gesture audio needs */
         $("scanTitle").textContent = state.mode === "tardiness" ? "Record Tardiness" : "Check Attendance";
-        $("scanSub").textContent = cls.name + " · " + cls.subject + " · starts " + cls.start;
+        $("scanSub").innerHTML = monoHtml(cls).replace('class="mono"', 'class="mono sm"') + '<span>' + esc(cls.name) + " · " + esc(cls.subject) + " · starts " + esc(cls.start) + '</span>';
         $("camMsg").textContent = "";
         show("scan");
         renderScanProgress();
