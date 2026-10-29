@@ -744,10 +744,7 @@
           <button class="backbtn" id="scanBack" type="button">← Done</button>
           <h1 id="scanTitle">Scanning</h1>
         </div>
-        <p class="sub" id="scanSub"></p>
-        <p class="sub" id="scanSheetNote" style="margin-top:6px; font-weight:600;"></p>
-        <p class="sub" style="margin-top:6px;">Keep scanning — just point at the next student's code. Nothing to tap between students.</p>
-        <p class="sub" style="margin-top:6px;">Finished? Tap <b>← Done</b> above: on the projector grid, every student who was not scanned turns red and is marked <b>off</b>.</p>
+        <p class="sub" id="scanSub" style="margin:0 0 6px;"></p>
         <div class="scan-progress" aria-live="polite">
           <b id="scanCount">0 / 0</b>
           <span id="scanRemaining">scanned</span>
@@ -758,7 +755,6 @@
           <div id="scanOverlay" class="scan-overlay" aria-live="polite">
             <div class="so-name" id="soName">—</div>
             <div class="so-row"><span class="so-id" id="soId">—</span><span class="chip" id="soChip">—</span></div>
-            <div class="so-compare">Check: the name + ID above must match the name + ID printed below the QR code on the student's card image.</div>
             <div class="so-sheet local" id="soSheet">Saved in app</div>
           </div>
         </div>
@@ -2322,11 +2318,7 @@ function reply(obj) {
         renderScanLog();
         initScanAudio(); /* this tap is the user gesture audio needs */
         $("scanTitle").textContent = state.mode === "tardiness" ? "Record Tardiness" : "Check Attendance";
-        $("scanSub").textContent = cls.name + " · " + cls.subject + " · starts " + cls.start +
-          (state.mode === "tardiness" ? " · late levels are worked out from the scan time" : " · students recorded Late stay Late");
-        $("scanSheetNote").textContent = (sheetCfg.sheetUrl && sheetCfg.webAppUrl)
-          ? "Google Sheet connected: every scan is saved instantly and queued to push to the Sheet in scan order, in the background — keep scanning, no need to tap Push."
-          : "Google Sheet not connected: attendance is still saved instantly in the app; set up Apps Script in Settings to push each scan to the Sheet right away.";
+        $("scanSub").textContent = cls.name + " · " + cls.subject + " · starts " + cls.start;
         $("camMsg").textContent = "";
         show("scan");
         renderScanProgress();
