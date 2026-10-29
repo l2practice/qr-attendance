@@ -864,7 +864,7 @@ service cloud.firestore {
         <div class="card" id="cardSheet">
           <h3>Google Sheet</h3>
           <p class="sub" id="gsStatus" style="margin-top:0;">Chưa cài đặt — nút “Push to Google Sheet” sẽ sao chép danh sách để dán tay.</p>
-          <p class="sub">Mỗi lớp một tab, tên tab <b>trùng đúng tên lớp</b>, trong tab có cột Họ tên + MSSV. Quét là app tự đẩy lên Sheet. Ký hiệu: <b>trống</b> = có mặt · <b>late10 / late20 / late&gt;20</b> · <b>off</b> = vắng.</p>
+          <p class="sub">Mỗi lớp một tab tên <b>trùng đúng tên lớp</b>. Chưa có tab thì script (bản v3) tự tạo tab và tự điền Họ tên + MSSV từ danh sách lớp. Quét là app tự đẩy lên Sheet. <b>Nếu bạn đang dùng mã GAS cũ: dán mã mới → Save → Deploy → Manage deployments → Edit → Version: New version → Deploy.</b> Ký hiệu: <b>trống</b> = có mặt · <b>late10 / late20 / late&gt;20</b> · <b>off</b> = vắng.</p>
           <details>
             <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Đã cài rồi — xem mã GAS / sửa link</summary>
             <p class="sub" style="margin-top:4px;">Cài lần đầu: copy mã GAS bên dưới → dán vào Sheet → <b>Extensions → Apps Script</b> → Save → <b>Deploy → Web app</b> (Execute as: Me · Who has access: Anyone) → điền 2 link dưới đây → bấm Lưu.</p>
@@ -873,31 +873,60 @@ service cloud.firestore {
             <label class="f" for="gsWebApp">Link Web App (…/exec)</label>
             <input type="text" id="gsWebApp" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" />
             <label class="f">Mã GAS (Apps Script)</label>
-            <textarea id="gsCode" readonly rows="12" style="font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; line-height:1.5; margin-top:6px;">function doPost(e) {
+            <textarea id="gsCode" readonly rows="12" style="font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; line-height:1.5; margin-top:6px;">// QR Attendance v3 — tu tao tab + danh sach sinh vien, ghi cot ngay dung kieu text
+function doPost(e) {
+  var lock = LockService.getScriptLock();
   try {
+    lock.waitLock(20000);
     var data = JSON.parse(e.postData.contents);
     var ss = data.spreadsheetId ? SpreadsheetApp.openById(data.spreadsheetId) : SpreadsheetApp.getActiveSpreadsheet();
+    var tz = ss.getSpreadsheetTimeZone();
     var sheet = ss.getSheetByName(data.tab);
-    if (!sheet) return reply({ ok: false, error: "Tab not found: " + data.tab });
-    var lastRow = sheet.getLastRow();
-    var lastCol = sheet.getLastColumn();
-    if (lastRow &lt; 2) return reply({ ok: false, error: "Tab " + data.tab + " has no student list yet." });
-    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var created = false;
+    if (!sheet) { sheet = ss.insertSheet(data.tab); created = true; }
+    if (sheet.getLastRow() &lt; 1) {
+      sheet.getRange(1, 1, 1, 2).setValues([["Họ tên", "MSSV"]]).setFontWeight("bold");
+    }
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var idCol = 2; // default layout: Full name in A, Student ID in B
     for (var c = 0; c &lt; headers.length; c++) {
       if (/mssv|student id/i.test(String(headers[c]))) { idCol = c + 1; break; }
     }
+    var nameCol = idCol === 1 ? 2 : 1;
+    // Make sure every student of the class has a row (append the missing ones).
+    var roster = data.roster || data.rows || [];
+    var have = {};
+    var lastRow = sheet.getLastRow();
+    if (lastRow &gt;= 2) {
+      var cur = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
+      for (var k = 0; k &lt; cur.length; k++) have[String(cur[k][0]).trim()] = true;
+    }
+    var add = [];
+    roster.forEach(function (r) { if (!have[String(r.mssv).trim()]) add.push(r); });
+    if (add.length) {
+      var at = lastRow + 1;
+      sheet.getRange(at, idCol, add.length, 1).setNumberFormat("@")
+        .setValues(add.map(function (r) { return [String(r.mssv)]; }));
+      sheet.getRange(at, nameCol, add.length, 1)
+        .setValues(add.map(function (r) { return [r.name || ""]; }));
+      lastRow = sheet.getLastRow();
+    }
+    if (lastRow &lt; 2) return reply({ ok: false, error: "Tab " + data.tab + " chưa có sinh viên nào (app không gửi danh sách lớp)." });
+    var lastCol = sheet.getLastColumn();
+    headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var header = String(data.header || data.date || "").trim();
     // --- Instant push: one student, the moment their QR is scanned ---
     if (data.action === "record") {
-      var header = data.header || data.date || "";
       var col = 0;
       for (var h = 0; h &lt; headers.length; h++) {
-        if (String(headers[h]).trim() === String(header).trim()) { col = h + 1; break; }
+        var hv = headers[h] instanceof Date ? Utilities.formatDate(headers[h], tz, "dd/MM/yyyy") : String(headers[h]).trim();
+        if (hv === header) { col = h + 1; break; }
       }
       if (!col) {
         col = lastCol + 1;
         var init = [[header]];
         for (var r0 = 0; r0 &lt; lastRow - 1; r0++) init.push(["off"]);
+        sheet.getRange(1, col).setNumberFormat("@"); // keep "29/10/2026" as text, never a Date
         sheet.getRange(1, col, init.length, 1).setValues(init);
         sheet.getRange(1, col).setFontWeight("bold");
       }
@@ -905,7 +934,7 @@ service cloud.firestore {
       for (var i1 = 0; i1 &lt; ids1.length; i1++) {
         if (String(ids1[i1][0]).trim() === String(data.mssv).trim()) {
           sheet.getRange(i1 + 2, col).setValue(data.status || "");
-          return reply({ ok: true, tab: data.tab, column: col, mssv: data.mssv });
+          return reply({ ok: true, v: 3, tab: data.tab, column: col, mssv: data.mssv, createdTab: created });
         }
       }
       return reply({ ok: false, error: "Student ID not found in tab: " + data.mssv });
@@ -914,23 +943,27 @@ service cloud.firestore {
     var byId = {};
     (data.rows || []).forEach(function (r) { byId[String(r.mssv)] = r; });
     var ids = sheet.getRange(2, idCol, lastRow - 1, 1).getValues();
-    var out = [[data.header || data.date || ""]];
+    var out = [[header]];
     for (var i = 0; i &lt; ids.length; i++) {
       var r = byId[String(ids[i][0]).trim()];
       if (!r) { out.push([""]); continue; }
-      out.push([r.status || ""]); // "" = co di hoc, late10 / late20 / late>20 = di tre, "off" = vang
+      out.push([r.status || ""]); // "" = co di hoc, late10 / late20 / late&gt;20 = di tre, "off" = vang
     }
     var newCol = lastCol + 1;
+    sheet.getRange(1, newCol).setNumberFormat("@");
     sheet.getRange(1, newCol, out.length, 1).setValues(out);
     sheet.getRange(1, newCol).setFontWeight("bold");
-    return reply({ ok: true, tab: data.tab, column: newCol });
+    return reply({ ok: true, v: 3, tab: data.tab, column: newCol, createdTab: created });
   } catch (err) {
     return reply({ ok: false, error: String(err) });
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
   }
 }
 function reply(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}</textarea>
+}
+</textarea>
             <div class="btnrow">
               <button class="btn" id="btnCopyCode" type="button">Sao chép mã GAS</button>
               <button class="btn" id="btnDownloadGas" type="button">Tải file Code.gs</button>
@@ -1086,12 +1119,12 @@ function reply(obj) {
         d = d || new Date();
         return pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
       }
-      function toast(msg, isErr) {
+      function toast(msg, isErr, ms) {
         var t = $("toast");
         t.textContent = msg;
         t.className = "show" + (isErr ? " err" : "");
         clearTimeout(t._h);
-        t._h = setTimeout(function () { t.className = ""; }, 2600);
+        t._h = setTimeout(function () { t.className = ""; }, ms || (isErr ? 5000 : 2600));
       }
 
       /* ---------- Class helpers ---------- */
@@ -1139,14 +1172,42 @@ function reply(obj) {
          projector grid learns about Done in real time too and can turn
          every unscanned cell red · off. */
       function sessionFinished(cls) { return !!state.finished[sessionKey(cls)]; }
-      function persistSessionDoc(cls) {
+      /* Writes only the student that changed (merge), never the whole
+         records map: two devices writing the same document must not
+         wipe each other's scans. No mssv = only the finished flag. */
+      function persistSessionDoc(cls, mssv) {
         if (!db) return;
         var key = sessionKey(cls);
         var fin = state.finished[key];
-        db.collection("attendance").doc(key.replace("|", "_")).set({
-          classId: cls.id, date: todayISO(), records: state.records[key] || {},
-          finished: !!fin, finishedAt: fin ? fin.at : ""
-        }).catch(function () { toast("Lưu lên đám mây thất bại — dữ liệu vẫn được giữ trên thiết bị này.", true); });
+        var doc = { classId: cls.id, date: todayISO(), finished: !!fin, finishedAt: fin ? fin.at : "" };
+        if (mssv && state.records[key] && state.records[key][mssv]) {
+          doc.records = {};
+          doc.records[mssv] = state.records[key][mssv];
+        }
+        db.collection("attendance").doc(key.replace("|", "_")).set(doc, { merge: true })
+          .then(function () { setFbHealth("ok"); })
+          .catch(function (e) {
+            setFbHealth("error", e);
+            toast("Lưu lên đám mây thất bại (" + fbErrText(e) + ") — dữ liệu vẫn được giữ trên thiết bị này.", true, 8000);
+          });
+      }
+      /* Real connection state: "unknown" until Firestore answers once,
+         "ok" after a successful read/write/snapshot, "error" with the
+         reason when it refuses. initializeApp alone proves nothing. */
+      var fbHealth = "unknown", fbHealthMsg = "";
+      function fbErrText(e) {
+        if (!e) return "lỗi không rõ";
+        var c = e.code || "";
+        if (c === "permission-denied") return "Rules từ chối — mở Firestore → Rules và Publish bản allow read, write";
+        if (c === "unavailable") return "không liên lạc được Firestore — kiểm tra mạng";
+        if (c === "not-found" || /database.*(not|does)/i.test(e.message || "")) return "chưa tạo Firestore Database";
+        return c || e.message || "lỗi không rõ";
+      }
+      function setFbHealth(h, e) {
+        fbHealth = h;
+        fbHealthMsg = h === "error" ? fbErrText(e) : "";
+        setFbStatus();
+        if (currentView === "display") renderDisplay(true);
       }
       function finishSession(cls) {
         if (!cls) return;
@@ -1167,9 +1228,9 @@ function reply(obj) {
           }).catch(function () { toast("Lưu lên đám mây thất bại — dữ liệu vẫn được giữ trên thiết bị này.", true); });
         }
       }
-      function persistSession(cls) {
+      function persistSession(cls, mssv) {
         saveLocal();
-        persistSessionDoc(cls);
+        persistSessionDoc(cls, mssv);
       }
       function deleteClassEverywhere(c) {
         saveLocal();
@@ -1191,9 +1252,20 @@ function reply(obj) {
         }
       }
       function setFbStatus() {
-        $("fbStatus").textContent = db && fbCfg
-          ? "Đã kết nối project “" + fbCfg.projectId + "” — dữ liệu đồng bộ lên mây, thiết bị nào kết nối cùng project này cũng thấy."
-          : "Chưa kết nối — dữ liệu chỉ lưu trên máy này.";
+        var el = $("fbStatus");
+        if (!(db && fbCfg)) {
+          el.textContent = "Chưa kết nối — dữ liệu chỉ lưu trên máy này.";
+          el.style.color = "";
+        } else if (fbHealth === "ok") {
+          el.textContent = "✓ Đã kết nối project “" + fbCfg.projectId + "” — Firestore phản hồi bình thường, thiết bị nào nối cùng project này cũng thấy dữ liệu.";
+          el.style.color = "";
+        } else if (fbHealth === "error") {
+          el.textContent = "✗ Khai báo project “" + fbCfg.projectId + "” nhưng Firestore KHÔNG hoạt động: " + fbHealthMsg + ". Dữ liệu hiện chỉ nằm trên máy này.";
+          el.style.color = "#c0392b";
+        } else {
+          el.textContent = "… Đang kiểm tra kết nối tới project “" + fbCfg.projectId + "”.";
+          el.style.color = "";
+        }
       }
       /* One paste box is the whole Firebase form: the snippet the
          teacher copies from the console is kept in the box, and the
@@ -1285,6 +1357,9 @@ function reply(obj) {
           if (firebase.apps && firebase.apps.length) { try { firebase.app().delete(); } catch (e) {} }
           firebase.initializeApp(cfg);
           db = firebase.firestore();
+          /* School/mobile networks and in-app browsers often block the
+             default streaming channel; without this, writes just hang. */
+          try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (e2) {}
         } catch (e) {
           db = null;
           if (!silent) toast("Không khởi tạo được Firebase — kiểm tra lại các giá trị cấu hình.", true);
@@ -1292,6 +1367,7 @@ function reply(obj) {
           return;
         }
         fbCfg = cfg;
+        fbHealth = "unknown"; fbHealthMsg = "";
         try { localStorage.setItem(LS_CFG, JSON.stringify(cfg)); } catch (e) {}
         fillFbManualFields(cfg);
         setFbStatus();
@@ -1318,16 +1394,18 @@ function reply(obj) {
             }
           });
           saveLocal();
+          setFbHealth("ok");
           renderSetup(); renderHome();
           if (currentView === "display") startDisplaySync();
           if (!silent) toast("Đã kết nối Firebase. Dữ liệu từ nay đồng bộ lên Firestore.");
-        }).catch(function () {
-          if (!silent) toast("Đã kết nối, nhưng đọc Firestore thất bại — kiểm tra đã tạo database chưa và rules có cho phép truy cập không.", true);
-          setFbStatus();
+        }).catch(function (e) {
+          /* Always shown, even on the silent auto-connect at page load. */
+          setFbHealth("error", e);
+          toast("Firebase lỗi: " + fbErrText(e), true, 9000);
         });
       }
       function disconnectFirebase() {
-        db = null; fbCfg = null;
+        db = null; fbCfg = null; fbHealth = "unknown"; fbHealthMsg = "";
         try { localStorage.removeItem(LS_CFG); } catch (e) {}
         if (typeof firebase !== "undefined" && firebase.apps && firebase.apps.length) {
           try { firebase.app().delete(); } catch (e) {}
@@ -1467,7 +1545,7 @@ function reply(obj) {
         el.className = "queue" + (pending === 0 && sheetFailedCount === 0 ? " ok" : "");
         el.textContent = "Google Sheet: " + sheetPushedCount + " pushed" +
           (pending ? " · " + pending + " in queue" : "") +
-          (sheetFailedCount ? " · " + sheetFailedCount + " failed (retry with Push on the home screen)" : "");
+          (sheetFailedCount ? " · " + sheetFailedCount + " failed: " + lastSheetError + " (retry with Push on the home screen)" : "");
       }
       function enqueueSheetPush(cls, stu, rec) {
         if (!sheetConnected()) {
@@ -1492,11 +1570,21 @@ function reply(obj) {
           if (ok) sheetPushedCount++; else sheetFailedCount++;
           if ($("soId").textContent === item.stu.mssv) {
             if (ok) setSheetLine("ok", "✓ Pushed to Google Sheet · " + item.stu.mssv);
-            else setSheetLine("wait", "Saved in app · Push to Sheet failed — the queue keeps going; retry with Push on the home screen");
+            else setSheetLine("wait", "Saved in app · Sheet failed: " + lastSheetError);
           }
           renderSheetQueueStatus();
           processSheetQueue(); /* next student — failures never stall the line */
         });
+      }
+      /* Why the last Sheet push failed, in words the teacher can act on.
+         Apps Script returns {ok:false,error}; anything else means the
+         request never reached a (current) script. */
+      var lastSheetError = "";
+      function sheetErrorText(data, httpStatus, rawText) {
+        if (data && data.error) return data.error;
+        if (httpStatus && httpStatus >= 400) return "Web App trả về HTTP " + httpStatus + " — kiểm tra link /exec";
+        if (rawText && /<html|<!doctype/i.test(rawText)) return "Web App trả về trang web thay vì JSON — Deploy phải đặt Who has access = Anyone, và dùng link /exec";
+        return "Web App không trả lời đúng định dạng — dán lại mã GAS mới nhất và Deploy → New version";
       }
       function pushOneToSheet(item) {
         var cls = item.cls, stu = item.stu, rec = item.rec;
@@ -1505,6 +1593,7 @@ function reply(obj) {
           action: "record",
           spreadsheetId: extractSheetId(sheetCfg.sheetUrl),
           tab: cls.name,
+          roster: cls.students.map(function (s) { return { mssv: s.mssv, name: s.name }; }),
           date: todayISO(),
           header: pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear(),
           mssv: stu.mssv, name: stu.name,
@@ -1517,18 +1606,23 @@ function reply(obj) {
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload),
           signal: ctrl ? ctrl.signal : undefined
-        }).then(function (res) { return res.text(); }).then(function (txt) {
+        }).then(function (res) { return res.text().then(function (t) { return { status: res.status, text: t }; }); }).then(function (r) {
           if (timer) clearTimeout(timer);
           var data = null;
-          try { data = JSON.parse(txt); } catch (e) {}
+          try { data = JSON.parse(r.text); } catch (e) {}
           if (data && data.ok) {
+            lastSheetError = "";
             state.pushes[sessionKey(cls)] = { at: nowTime().slice(0, 5), column: data.column || 0 };
             saveLocal();
             return true;
           }
+          lastSheetError = sheetErrorText(data, r.status, r.text);
           return false;
-        }).catch(function () {
+        }).catch(function (e) {
           if (timer) clearTimeout(timer);
+          lastSheetError = e && e.name === "AbortError"
+            ? "Quá 12 giây không có phản hồi từ Web App"
+            : "Không kết nối được Web App — sai link /exec hoặc mất mạng";
           return false;
         });
       }
@@ -1594,7 +1688,7 @@ function reply(obj) {
            is cleared (and synced) so the projector grid stops showing
            the unscanned students as off. */
         if (state.finished[sessionKey(cls)]) delete state.finished[sessionKey(cls)];
-        persistSession(cls);
+        persistSession(cls, code);
         renderScanLog();
         renderHomeStats();
         renderScanProgress();
@@ -1802,10 +1896,13 @@ function reply(obj) {
           }
         }
         var live = $("displayLive");
-        var synced = !!db;
+        var synced = !!db && fbHealth === "ok";
         live.classList.toggle("on", synced);
-        $("displayLiveText").textContent = synced ? "Live · Firebase" : "Local only";
-        $("displaySyncNote").textContent = synced
+        $("displayLiveText").textContent = synced ? "Live · Firebase"
+          : (db && fbHealth === "error" ? "Firebase error" : (db ? "Connecting…" : "Local only"));
+        $("displaySyncNote").textContent = db && fbHealth === "error"
+          ? "Firebase is configured but NOT working: " + fbHealthMsg + ". Scans from the teacher's phone will not appear until this is fixed (Settings → Firebase)."
+          : synced
           ? "Synced in real time through Firebase — scans recorded on the teacher's phone appear here automatically."
           : "Firebase is not connected on this device, so this screen only follows scans recorded on this device. To sync the teacher's phone with this screen, connect the same Firebase project on both devices (Settings → Firebase).";
         if (!cls) {
@@ -1965,6 +2062,7 @@ function reply(obj) {
           var unsubAtt = db.collection("attendance").doc(cls.id + "_" + todayISO())
             .onSnapshot(function (doc) {
               if (currentView !== "display") return;
+              if (fbHealth !== "ok" && !(doc.metadata && doc.metadata.fromCache)) setFbHealth("ok");
               if (doc.exists) {
                 var d = doc.data();
                 if (d && d.classId === cls.id) {
@@ -1975,7 +2073,7 @@ function reply(obj) {
                 }
               }
               renderDisplay(true);
-            }, function () { /* listener error — the local poll still refreshes the screen */ });
+            }, function (e) { setFbHealth("error", e); /* local poll still refreshes this device's own scans */ });
           displayUnsubs.push(unsubAtt);
           /* The class doc too, so roster/name fixes made elsewhere show up. */
           var unsubCls = db.collection("classes").doc(cls.id)
@@ -2125,20 +2223,25 @@ function reply(obj) {
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload),
           signal: ctrl ? ctrl.signal : undefined
-        }).then(function (res) { return res.text(); }).then(function (txt) {
+        }).then(function (res) { return res.text().then(function (t) { return { status: res.status, text: t }; }); }).then(function (r) {
           var data = null;
-          try { data = JSON.parse(txt); } catch (e) {}
+          try { data = JSON.parse(r.text); } catch (e) {}
           if (data && data.ok) {
             state.pushes[key] = { at: nowTime().slice(0, 5), column: data.column || 0 };
             saveLocal();
             toast("Pushed to Google Sheet — tab “" + cls.name + "”" +
               (data.column ? ", new column " + columnLetter(data.column) : "") + " added.");
           } else {
-            sheetFallback(cls, "Push failed" + (data && data.error ? " (" + data.error + ")" : " — check the Web App link and that access is set to Anyone") + ".");
+            /* Show the real reason and keep it up long enough to read;
+               copying to the clipboard here would overwrite this message
+               (and phones block clipboard writes after a network wait). */
+            toast("Push failed: " + sheetErrorText(data, r.status, r.text), true, 12000);
           }
           finish();
-        }).catch(function () {
-          sheetFallback(cls, "Could not reach your Google Sheet — check the Web App link and your connection.");
+        }).catch(function (e) {
+          toast("Push failed: " + (e && e.name === "AbortError"
+            ? "no reply from the Web App within 20 s"
+            : "could not reach the Web App — wrong /exec link or no connection"), true, 12000);
           finish();
         });
       }
@@ -2859,6 +2962,14 @@ function reply(obj) {
           sheetCfg.sheetUrl = $("gsUrl").value.trim();
           sheetCfg.webAppUrl = $("gsWebApp").value.trim();
           saveSheetCfg();
+          if (sheetCfg.webAppUrl && !/^https:\/\/script\.google\.com\/.+\/exec(\?.*)?$/.test(sheetCfg.webAppUrl)) {
+            toast("Link Web App phải có dạng https://script.google.com/macros/s/…/exec (hiện không phải — link /dev hoặc link khác sẽ không chạy).", true, 9000);
+            return;
+          }
+          if (sheetCfg.sheetUrl && !extractSheetId(sheetCfg.sheetUrl)) {
+            toast("Link Google Sheet không hợp lệ — cần dạng https://docs.google.com/spreadsheets/d/…", true, 9000);
+            return;
+          }
           toast(sheetCfg.sheetUrl && sheetCfg.webAppUrl
             ? "Đã lưu cài đặt Google Sheet — nút “Push to Google Sheet” đã sẵn sàng."
             : "Đã lưu. Hãy điền đủ cả hai link để bật tính năng đẩy dữ liệu.");
