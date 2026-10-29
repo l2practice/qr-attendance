@@ -459,31 +459,38 @@
       .live-dot.on i { background: var(--green); animation: live-pulse 1.8s ease-out infinite; }
       @keyframes live-pulse { 0% { box-shadow: 0 0 0 0 var(--green-bg); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
       .display-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-top: 6px; }
-      .display-head .class-name { font-size: clamp(30px, 4.2vw, 44px); }
-      .display-head .class-subject { font-size: clamp(16px, 2vw, 21px); }
+      .display-head > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; }
+      .display-head .class-name { font-size: clamp(26px, 3vw, 34px); }
+      .display-head .class-subject { font-size: clamp(15px, 1.6vw, 19px); margin: 0; }
+      .display-head .class-meta { flex-basis: 100%; margin-top: 2px; }
       .display-select { min-width: min(320px, 100%); flex: 0 1 340px; }
       .display-select label.f { margin-top: 0; }
       .hero {
-        margin-top: 18px; border-radius: 28px; padding: clamp(26px, 4.5vw, 52px);
+        margin-top: 14px; border-radius: 24px; padding: clamp(14px, 1.6vw, 20px) clamp(20px, 3vw, 36px);
         background: var(--surface) var(--grad-panel); text-align: center; overflow: hidden;
       }
-      .hero .hero-kicker { font-size: clamp(15px, 1.8vw, 19px); font-weight: 600; color: var(--muted); margin: 0; }
+      .hero .hero-kicker { font-size: clamp(14px, 1.4vw, 17px); font-weight: 600; color: var(--muted); margin: 0; }
       .hero .hero-check {
-        width: clamp(74px, 9vw, 108px); height: clamp(74px, 9vw, 108px); margin: 0 auto 18px;
+        width: clamp(48px, 5vw, 64px); height: clamp(48px, 5vw, 64px); margin: 0 auto 8px;
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
         background: var(--green-bg); color: var(--green);
-        font-size: clamp(38px, 5vw, 56px); font-weight: 700; line-height: 1;
+        font-size: clamp(24px, 2.8vw, 34px); font-weight: 700; line-height: 1;
       }
+      .hero .hero-check { display: none; } /* the chip and the colour already say it; the space goes to the grid */
       .hero.waiting .hero-check { background: var(--surface-2); color: var(--muted); }
       .hero.late .hero-check { background: var(--amber-bg); color: var(--amber); }
-      .hero .hero-name { font-size: clamp(44px, 7vw, 88px); font-weight: 700; line-height: 1.06; letter-spacing: -0.028em; margin: 8px 0 0; overflow-wrap: anywhere; }
-      .hero .hero-id { font-size: clamp(24px, 3.4vw, 40px); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--muted); margin-top: 10px; }
-      .hero .hero-meta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
-      .hero .hero-meta .chip { font-size: clamp(16px, 2vw, 21px); padding: 8px 20px; }
-      .hero .hero-time { font-size: clamp(16px, 2vw, 21px); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .hero .hero-name { font-size: clamp(34px, 4.6vw, 62px); font-weight: 700; line-height: 1.08; letter-spacing: -0.025em; margin: 4px 0 0; overflow-wrap: anywhere; }
+      .hero .hero-id { font-size: clamp(20px, 2.4vw, 30px); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--muted); margin-top: 4px; }
+      .hero .hero-meta { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+      .hero .hero-meta .chip { font-size: clamp(15px, 1.6vw, 19px); padding: 6px 18px; }
+      .hero .hero-time { font-size: clamp(15px, 1.6vw, 19px); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
       .hero.pop { animation: hero-in .5s var(--spring-bounce) both; }
       @keyframes hero-in { from { opacity: .35; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
-      .display-progress { margin-top: 16px; background: var(--surface); border-radius: 22px; padding: 18px 22px; }
+      .display-progress { margin-top: 12px; background: var(--surface) var(--grad-panel); border-radius: 20px; padding: 14px 20px; }
+      .display-progress .sub { font-size: 12.5px; margin: 8px 0 0 !important; }
+      .display-progress .btnrow { margin-top: 10px; }
+      .display-progress .btnrow .btn { flex: 0 0 auto; min-height: 40px; padding: 8px 20px; font-size: 14px; }
+      #displayFinishNote { display: none !important; } /* the button label already says what Done does */
       .display-progress .dp-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
       .display-progress .dp-row b { font-size: clamp(30px, 4vw, 42px); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
       .display-progress .dp-row span { font-size: 15px; font-weight: 500; color: var(--muted); }
@@ -528,7 +535,7 @@
       @media (max-width: 700px) { .mode-switch, .laptop-only { display: none; } }
 
       /* ——— Projector roster grid ——— */
-      .display-grid-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 28px 2px 8px; flex-wrap: wrap; }
+      .display-grid-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 2px 8px; flex-wrap: wrap; }
       .display-grid-head h3 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.014em; }
       .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 2px 12px; }
       .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 500; color: var(--muted); background: var(--surface); border-radius: 999px; padding: 5px 12px 5px 8px; }
