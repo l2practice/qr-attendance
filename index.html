@@ -1444,7 +1444,31 @@ function reply(obj) {
         if (i > 0) return { mssv: text.slice(0, i).trim(), name: text.slice(i + 1).trim() };
         return { mssv: text, name: "" };
       }
-      function qrPayload(s) { return s.mssv + "|" + s.name; }
+      /* The QR carries plain ASCII only. A QR has no reliable way to say
+         "this is UTF-8", so scanners guess the charset — and some (ZXing
+         on iPhone) guess Shift_JIS, turning "Lê Đức Phát" into katakana
+         garbage and corrupting the ID next to it. Accents are folded
+         away here; the properly accented name always comes from the
+         class list, not from the code. */
+      function qrAscii(name) {
+        return String(name || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+          .replace(/đ/g, "d").replace(/Đ/g, "D").replace(/[^\x20-\x7e]/g, "").replace(/\|/g, " ").trim();
+      }
+      function qrPayload(s) { return s.mssv + "|" + qrAscii(s.name); }
+      /* Match a scanned text to a student even when an old card (accented
+         name inside the code) was decoded with the wrong charset: the
+         exact ID first, then any roster ID found inside the raw text. */
+      function findStudentByScan(cls, parsed, raw) {
+        var s = findStudent(cls, parsed.mssv);
+        if (s) return s;
+        var clean = parsed.mssv.replace(/[^A-Za-z0-9]/g, "");
+        if (clean && (s = findStudent(cls, clean))) return s;
+        var text = String(raw == null ? "" : raw), best = null;
+        cls.students.forEach(function (st) {
+          if (st.mssv && text.indexOf(st.mssv) >= 0 && (!best || st.mssv.length > best.mssv.length)) best = st;
+        });
+        return best;
+      }
 
       /* Instant overlay over the camera: name + ID + result, shown the
          moment a scan is recorded. No confirmation — attendance is
@@ -1639,7 +1663,8 @@ function reply(obj) {
         var parsed = parseQrCode(rawCode);
         var code = parsed.mssv;
         if (!code) return;
-        var stu = findStudent(cls, code);
+        var stu = findStudentByScan(cls, parsed, rawCode);
+        if (stu) code = stu.mssv;
         var recs = session(cls);
         var t = nowTime();
         if (!stu) {
@@ -2676,7 +2701,7 @@ function reply(obj) {
         setTimeout(function () { a.remove(); }, 400);
       }
       function cardFileName(s) {
-        return "QR-" + s.mssv + "-" + s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") + ".png";
+        return "QR-" + s.mssv + "-" + qrAscii(s.name).replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") + ".png";
       }
       /* In-app card viewer: the generated card, shown full-size with a
          real download link. Some browsers and in-app webviews swallow a
