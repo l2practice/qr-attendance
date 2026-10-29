@@ -615,11 +615,12 @@
         .cell, .ms-btn { transition: none; }
         @keyframes fade-only { from { opacity: 0; } to { opacity: 1; } }
       }
+      /* Higher-contrast variants follow the app's own theme, not the
+         system's: a phone in system dark mode with Increase Contrast must
+         not push light-grey text onto the light theme. */
       @media (prefers-contrast: more) {
-        :root { --line: #8a9690; --muted: #3a423d; }
-      }
-      @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-        :root { --line: #7d8a84; --muted: #d4dbd7; }
+        :root[data-theme="light"] { --line: #8a9690; --muted: #3a423d; --faint: #3a423d; }
+        :root[data-theme="dark"] { --line: #8a7565; --muted: #e3d3c6; --faint: #d2c0b2; }
       }
     </style>
   </head>
