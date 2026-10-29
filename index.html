@@ -1003,12 +1003,13 @@ function reply(obj) {
 
         <div class="card">
           <h3>Deliver QR Code — phát mã QR cho sinh viên</h3>
-          <p class="sub" style="margin-top:0;">Mỗi sinh viên <b>một hình PNG duy nhất</b>: mã QR ở trên, <b>họ tên + MSSV in ngay bên dưới, trong cùng một hình</b> — sinh viên không thể nói mở nhầm mã của người khác. Mã dùng cả năm học. Bấm <b>Tải / xem thẻ</b> để lấy thẻ từng người (kèm nút tải PNG trong khung xem thẻ), hoặc <b>Tải tất cả thẻ</b> cho cả lớp.</p>
+          <p class="sub" style="margin-top:0;">Mỗi sinh viên <b>một hình PNG duy nhất</b>: mã QR ở trên, <b>họ tên + MSSV in ngay bên dưới, trong cùng một hình</b> — sinh viên không thể nói mở nhầm mã của người khác. Mã dùng cả năm học. Bấm <b>Tải / xem thẻ</b> để lấy thẻ từng người, hoặc <b>Tải tất cả (1 file ZIP)</b>: app đóng gói <b>toàn bộ thẻ PNG của lớp vào đúng 1 file ZIP</b> — bạn chỉ tải 1 file, giải nén ra là có đủ từng thẻ để gửi từng sinh viên. Trình duyệt không còn chặn vì không phải tải nhiều file riêng lẻ nữa.</p>
           <div class="btnrow">
             <button class="btn primary" id="btnShowQr" type="button">Hiện mã QR</button>
-            <button class="btn" id="btnDownloadAllQr" type="button">Tải tất cả thẻ (hình PNG)</button>
+            <button class="btn" id="btnDownloadAllQr" type="button">📦 Tải tất cả — 1 file ZIP</button>
             <button class="btn" id="btnCopyQr" type="button">Sao chép danh sách QR cho Google Sheets</button>
           </div>
+          <p class="sub" id="qrZipStatus" role="status" style="display:none; margin-top:10px; font-weight:600;"></p>
           <div id="qrWrap" style="display:none; margin-top:12px; overflow-x:auto;">
             <table class="qr">
               <thead><tr><th>Thẻ QR — một hình gồm mã + họ tên + MSSV bên dưới</th><th></th></tr></thead>
@@ -2598,6 +2599,115 @@ function reply(obj) {
           toast("Đã tạo thẻ của " + s.name + " — bấm “Tải xuống (PNG)” trong khung vừa mở để lưu hình về máy.");
         });
       }
+      /* ---------- ZIP packaging (no external library) ----------
+         Browsers only allow a handful of automatic downloads per page
+         interaction — the old “download all” loop fired one download
+         per student, so the teacher got only the first ~3 cards and
+         had to fetch the rest one by one. The fix: build every card
+         in memory, pack them into ONE ZIP file (STORE method — PNGs
+         are already compressed), and trigger exactly ONE download.
+         The ZIP writer below is a minimal, spec-correct implementation
+         (local headers + central directory + CRC-32), so it works
+         offline and never depends on a CDN library loading. */
+      var _crcTable = null;
+      function crc32(bytes) {
+        if (!_crcTable) {
+          _crcTable = [];
+          for (var n = 0; n < 256; n++) {
+            var c = n;
+            for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            _crcTable[n] = c >>> 0;
+          }
+        }
+        var crc = 0xFFFFFFFF;
+        for (var i = 0; i < bytes.length; i++) crc = _crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+      function dataUrlToBytes(dataUrl) {
+        var comma = dataUrl.indexOf(",");
+        var b64 = dataUrl.slice(comma + 1);
+        var bin = atob(b64);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes;
+      }
+      function utf8Bytes(str) {
+        if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(str);
+        var out = [];
+        var enc = unescape(encodeURIComponent(str));
+        for (var i = 0; i < enc.length; i++) out.push(enc.charCodeAt(i));
+        return new Uint8Array(out);
+      }
+      function buildZipBlob(files) {
+        /* files: [{name, data:Uint8Array}] — STORE (method 0) */
+        var now = new Date();
+        var dosTime = ((now.getHours() & 31) << 11) | ((now.getMinutes() & 63) << 5) | ((Math.floor(now.getSeconds() / 2)) & 31);
+        var dosDate = (((Math.max(1980, now.getFullYear()) - 1980) & 127) << 9) | (((now.getMonth() + 1) & 15) << 5) | (now.getDate() & 31);
+        var chunks = [], central = [], offset = 0;
+        files.forEach(function (f) {
+          var nameBytes = utf8Bytes(f.name);
+          var crc = crc32(f.data);
+          var size = f.data.length;
+          var lh = new DataView(new ArrayBuffer(30));
+          lh.setUint32(0, 0x04034b50, true);
+          lh.setUint16(4, 20, true);            /* version needed */
+          lh.setUint16(6, 0x0800, true);        /* UTF-8 filename flag */
+          lh.setUint16(8, 0, true);             /* method: store */
+          lh.setUint16(10, dosTime, true);
+          lh.setUint16(12, dosDate, true);
+          lh.setUint32(14, crc, true);
+          lh.setUint32(18, size, true);
+          lh.setUint32(22, size, true);
+          lh.setUint16(26, nameBytes.length, true);
+          lh.setUint16(28, 0, true);
+          chunks.push(new Uint8Array(lh.buffer), nameBytes, f.data);
+          var ch = new DataView(new ArrayBuffer(46));
+          ch.setUint32(0, 0x02014b50, true);
+          ch.setUint16(4, 20, true);
+          ch.setUint16(6, 20, true);
+          ch.setUint16(8, 0x0800, true);
+          ch.setUint16(10, 0, true);
+          ch.setUint16(12, dosTime, true);
+          ch.setUint16(14, dosDate, true);
+          ch.setUint32(16, crc, true);
+          ch.setUint32(20, size, true);
+          ch.setUint32(24, size, true);
+          ch.setUint16(28, nameBytes.length, true);
+          ch.setUint16(30, 0, true);
+          ch.setUint16(32, 0, true);
+          ch.setUint16(34, 0, true);
+          ch.setUint16(36, 0, true);
+          ch.setUint32(38, 0, true);
+          ch.setUint32(42, offset, true);
+          central.push(new Uint8Array(ch.buffer), nameBytes);
+          offset += 30 + nameBytes.length + size;
+        });
+        var centralStart = offset;
+        var centralSize = 0;
+        central.forEach(function (p) { centralSize += p.length; });
+        var eocd = new DataView(new ArrayBuffer(22));
+        eocd.setUint32(0, 0x06054b50, true);
+        eocd.setUint16(4, 0, true);
+        eocd.setUint16(6, 0, true);
+        eocd.setUint16(8, files.length, true);
+        eocd.setUint16(10, files.length, true);
+        eocd.setUint32(12, centralSize, true);
+        eocd.setUint32(16, centralStart, true);
+        eocd.setUint16(20, 0, true);
+        var parts = chunks.concat(central, [new Uint8Array(eocd.buffer)]);
+        return new Blob(parts, { type: "application/zip" });
+      }
+      function zipFileName(cls) {
+        var base = String(cls.name || "lop").replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") || "lop";
+        return "QR-" + base + ".zip";
+      }
+      function setQrZipStatus(text, isErr) {
+        var el = $("qrZipStatus");
+        if (!el) return;
+        el.style.display = text ? "block" : "none";
+        el.textContent = text || "";
+        el.style.color = isErr ? "var(--red)" : "var(--accent-strong)";
+      }
       function downloadAllQrCards(btn) {
         var c = editingClass();
         if (!c) return;
@@ -2605,20 +2715,44 @@ function reply(obj) {
         var list = sortedStudents(c);
         var old = btn ? btn.textContent : "";
         if (btn) btn.disabled = true;
-        var i = 0, okCount = 0;
-        toast("Đang tạo và tải " + list.length + " hình thẻ — mỗi hình gồm mã QR + họ tên + MSSV…");
+        var i = 0, entries = [], failed = [];
+        setQrZipStatus("Đang tạo thẻ 0/" + list.length + " để đóng gói ZIP…", false);
+        toast("Đang tạo " + list.length + " thẻ và đóng gói thành 1 file ZIP…");
         (function next() {
           if (i >= list.length) {
             if (btn) { btn.disabled = false; btn.textContent = old; }
-            if (okCount) toast("Đã tải " + okCount + "/" + list.length + " hình thẻ. Nếu trình duyệt chặn tải nhiều file cùng lúc, hãy bấm “Tải / xem thẻ” ở từng sinh viên để lấy từng hình.");
-            else toast("Không tạo được hình thẻ nào — kiểm tra kết nối mạng rồi thử lại.", true);
+            if (!entries.length) {
+              setQrZipStatus("Không tạo được thẻ nào — kiểm tra kết nối mạng rồi thử lại.", true);
+              toast("Không tạo được hình thẻ nào — kiểm tra kết nối mạng rồi thử lại.", true);
+              return;
+            }
+            try {
+              var zipName = zipFileName(c);
+              var blob = buildZipBlob(entries);
+              var url = URL.createObjectURL(blob);
+              triggerDownload(url, zipName);
+              setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+              var note = "Đã tải 1 file ZIP: " + zipName + " — chứa " + entries.length + "/" + list.length + " thẻ PNG" +
+                (failed.length ? " (" + failed.length + " thẻ tạo lỗi: " + failed.join(", ") + " — hãy tải riêng các thẻ này bằng nút “Tải / xem thẻ”)" : "") +
+                ". Giải nén file ZIP là có đủ từng thẻ PNG (tên file: QR-MSSV-Họ_tên.png) để gửi từng sinh viên.";
+              setQrZipStatus(note, failed.length > 0);
+              toast("Đã tải " + zipName + " — " + entries.length + " thẻ trong 1 file ZIP. Giải nén để gửi sinh viên.");
+            } catch (e) {
+              setQrZipStatus("Đóng gói ZIP thất bại trên trình duyệt này — hãy tải từng thẻ bằng nút “Tải / xem thẻ”.", true);
+              toast("Đóng gói ZIP thất bại — hãy tải từng thẻ bằng nút “Tải / xem thẻ”.", true);
+            }
             return;
           }
           var s = list[i++];
-          if (btn) btn.textContent = "Đang tải " + i + "/" + list.length + "…";
+          if (btn) btn.textContent = "Đang tạo thẻ " + i + "/" + list.length + "…";
+          setQrZipStatus("Đang tạo thẻ " + i + "/" + list.length + " để đóng gói ZIP…", false);
           buildQrCardImage(c, s, function (url) {
-            if (url) { okCount++; triggerDownload(url, cardFileName(s)); }
-            setTimeout(next, 500);
+            if (url) {
+              try { entries.push({ name: cardFileName(s), data: dataUrlToBytes(url) }); }
+              catch (e) { failed.push(s.mssv); }
+            } else failed.push(s.mssv);
+            /* Small yield so the progress text paints between cards */
+            setTimeout(next, 30);
           });
         })();
       }
