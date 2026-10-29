@@ -142,26 +142,7 @@
       .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.012em; }
       /* GAS must be impossible to miss: a bordered, tinted block inside
          the Sheet card, plus a jump card at the very top of Settings. */
-      .gas-box {
-        border: 2px solid var(--accent); background: var(--accent-soft);
-        border-radius: 16px; padding: 16px; margin-top: 16px;
-        scroll-margin-top: 92px;
-      }
       #cardFirebase, #cardSheet { scroll-margin-top: 76px; }
-      .gas-box h3 { font-size: 19px; margin: 0 0 6px; }
-      .gas-box.flash { animation: gas-flash 1.6s var(--ease-out) 2; }
-      @keyframes gas-flash {
-        0%, 100% { box-shadow: 0 0 0 0 transparent; }
-        35% { box-shadow: 0 0 0 6px var(--accent-soft), 0 0 0 8px var(--accent); }
-      }
-      @media (prefers-reduced-motion: reduce) { .gas-box.flash { animation: none; } }
-      .setup-jump {
-        border: 2px solid var(--accent); background: var(--surface);
-        border-radius: var(--radius); box-shadow: var(--shadow-card);
-        padding: 18px 20px; margin-top: 16px;
-      }
-      .setup-jump h3 { margin: 0 0 6px; font-size: 18px; }
-      .setup-jump ol { margin: 8px 0 4px; padding-left: 22px; line-height: 1.65; font-size: 15px; }
       .fb-rules {
         width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace;
         font-size: 12px; line-height: 1.5; margin-top: 6px;
@@ -392,9 +373,6 @@
          browser or in-app webview swallows a scripted download click. */
       .qr-view-img { display: block; width: 100%; max-width: 330px; margin: 2px auto 14px; border-radius: 10px; box-shadow: 0 8px 28px rgba(0, 0, 0, .2); }
       a.btn { text-decoration: none; text-align: center; }
-      /* Firebase field hints: the expected value, shown under its field */
-      .fb-hint { font-size: 12.5px; color: var(--muted); margin: 3px 2px 0; line-height: 1.5; }
-      .fb-hint code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; background: var(--surface-3); padding: 1px 5px; border-radius: 5px; color: inherit; word-break: break-all; }
 
       .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: 15px; }
       .divider { border: 0; border-top: .5px solid var(--line); margin: 22px 0; }
@@ -625,11 +603,6 @@
       <section id="view-home" class="view active">
         <p class="dateline" id="dateline">—</p>
 
-        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
-        </div>
-
         <button class="scan-cta" id="btnScan" type="button">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4" rx=".5"/><rect x="13" y="7" width="4" height="4" rx=".5"/><rect x="7" y="13" width="4" height="4" rx=".5"/><path d="M13 13h2v2h-2zM17 15h2v2h-2zM15 17h2v2h-2z"/></svg>
           Open Camera to scan
@@ -677,7 +650,7 @@
             Settings
           </button>
         </div>
-        <p class="sub" style="margin:10px 2px 0;">On a laptop, use the big <b>Settings ⇄ Live Observation</b> switch above: type the roster in Settings, then flip to Live Observation for the projector. The whole class is shown as a grid — a scanned student's cell turns <b>green</b> (late = <b>yellow</b>, with late10 / late20 / late&gt;20 under the name), and after you tap <b>Done</b> everyone not scanned turns <b>red · off</b>. It syncs in real time through Firebase (connect it once in Settings); on this device alone it follows scans made here.</p>
+        <p class="sub" style="margin:10px 2px 0;"><b>Live Observation</b> chiếu lưới lớp lên máy chiếu: quét trúng → ô <b>xanh lá</b>, trễ → <b>vàng</b> (kèm mức late10 / late20 / late&gt;20), bấm <b>Done</b> xong ai chưa quét → <b>đỏ · off</b>. Đồng bộ giữa điện thoại và máy tính qua Firebase (kết nối trong Settings).</p>
       </section>
 
       <!-- ============ PROJECTOR DISPLAY (desktop) ============ -->
@@ -804,24 +777,7 @@
           <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
           <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
-        <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập và sửa danh sách lớp ở chế độ <b>Settings</b> cho nhanh bằng bàn phím, xong bấm <b>Live Observation</b> ở thanh trên để chuyển ngay sang lưới chiếu — bấm qua lại bất cứ lúc nào, không mất dữ liệu đang nhập dở trong lớp đã lưu.</p>
-
-        <div class="setup-jump" id="setupJump">
-          <h3>Bạn đang tìm GAS? — GAS ở ngay đây 👇</h3>
-          <p class="sub" style="margin:0;">GAS là <b>Google Apps Script</b> — đoạn mã dán <b>vào trong file Google Sheet của bạn</b> (không dán vào Firebase, không có file riêng ngoài app). Trước đây mã này bị gấp kín ở gần cuối trang nên rất khó thấy; nay mã <b>hiện sẵn</b> trong thẻ “Google Sheet + GAS” bên dưới.</p>
-          <ol>
-            <li><b>Firebase:</b> dán cấu hình + dán Rules cho project <b>qr-att-73f4b</b> — nếu bạn đã Publish Rules rồi thì bước này xong.</li>
-            <li><b>GAS:</b> bấm nút xanh bên dưới để đi thẳng tới mã, bấm <b>Sao chép mã GAS</b>, rồi vào Sheet → <b>Extensions → Apps Script</b> → dán → Save → Deploy → Web app.</li>
-            <li><b>Quay lại app:</b> dán link Sheet + link Web App (…/exec) vào ô dưới mã GAS và bấm Lưu.</li>
-          </ol>
-          <div class="btnrow">
-            <button class="btn primary block" id="btnGotoGas" type="button">⬇ Đi thẳng tới mã GAS — sao chép ngay</button>
-          </div>
-          <div class="btnrow">
-            <button class="btn" id="btnGotoFirebase" type="button">Tới mục Firebase / Rules</button>
-            <button class="btn" id="btnDownloadGasTop" type="button">Tải mã GAS (file Code.gs)</button>
-          </div>
-        </div>
+        <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập danh sách ở <b>Settings</b>, bấm <b>Live Observation</b> để chiếu lưới lớp.</p>
 
         <h3 style="margin:14px 0 10px; font-size:16px;">Các lớp của bạn</h3>
         <div id="classList"></div>
@@ -842,59 +798,23 @@
         </div>
 
         <div class="card">
-          <h3>Màn hình chiếu (desktop) — sinh viên thấy ngay khi được quét</h3>
-          <p class="sub" style="margin-top:0;">Mở app này trên <b>laptop / máy tính lớp học</b> (máy nối với máy chiếu). Thanh chuyển chế độ lớn ở đầu mỗi màn hình cho phép bạn bấm qua lại ngay trên laptop: <b>Settings</b> để nhập và sửa danh sách lớp bằng bàn phím cho nhanh, <b>Live Observation</b> để chiếu. Ở chế độ Live Observation, toàn bộ lớp hiện thành <b>lưới — mỗi sinh viên một ô</b>: quét trúng (có mặt) thì ô đổi <b>xanh lá</b> ngay; quét trễ thì ô đổi <b>vàng</b> và hiện mức <b>late10 / late20 / late&gt;20</b> ngay bên dưới tên; sinh viên vừa quét còn hiện thật to ở đầu màn hình kèm MSSV và giờ quét.</p>
-          <ol class="sub" style="margin:6px 0 4px; padding-left:20px; line-height:1.7;">
-            <li><b>Để điện thoại và máy chiếu đồng bộ thời gian thực, cả hai thiết bị phải kết nối cùng một project Firebase</b> (mục ngay bên dưới): nhập cùng cấu hình Firebase trên điện thoại và trên máy tính lớp, rồi bấm Kết nối Firebase ở cả hai nơi.</li>
-            <li>Sau đó cứ quét bình thường trên điện thoại — từng ô trên lưới laptop tự đổi màu ngay khi có sinh viên mới, bạn không cần chạm vào máy tính.</li>
-            <li>Quét xong, bấm <b>Done</b> trên màn hình quét của điện thoại (hoặc nút Done ngay trên màn hình chiếu): các sinh viên <b>chưa được quét</b> sẽ chuyển sang <b>màu đỏ</b> và ghi <b>off</b> trên lưới. Mở lại màn hình quét là buổi học tự mở lại để quét tiếp.</li>
-            <li>Nếu chưa kết nối Firebase, màn hình chiếu vẫn dùng được trên <b>cùng một thiết bị</b> (hiện các lần quét đã ghi trên thiết bị đó), nhưng điện thoại và máy tính sẽ <b>không</b> thấy nhau — trạng thái đồng bộ được ghi rõ ngay trên màn hình chiếu.</li>
-          </ol>
-          <div class="btnrow"><button class="btn primary block" id="btnSetupDisplay" type="button">Mở màn hình chiếu</button></div>
+          <h3>Live Observation — màn hình chiếu</h3>
+          <p class="sub" style="margin-top:0;">Mở trên laptop nối máy chiếu: cả lớp hiện thành lưới, quét trúng ô đổi <b>xanh lá</b>, trễ <b>vàng</b>, bấm Done xong ai chưa quét → <b>đỏ · off</b>. Muốn điện thoại và máy chiếu đồng bộ, cả hai phải kết nối cùng một Firebase (mục bên dưới).</p>
+          <div class="btnrow"><button class="btn primary block" id="btnSetupDisplay" type="button">Mở Live Observation</button></div>
         </div>
 
         <div class="card" id="cardFirebase">
-          <h3>Firebase — lưu trữ đám mây</h3>
-          <p class="sub" id="fbStatus" style="margin-top:0;">Trạng thái: Chế độ lưu trên máy — dữ liệu chỉ lưu trên thiết bị này.</p>
-          <p class="sub">Hãy tạo một <b>project Firebase mới, riêng</b> cho app điểm danh này. Cách tạo:</p>
-          <ol class="sub" style="margin:6px 0 4px; padding-left:20px; line-height:1.7;">
-            <li>Vào <b>console.firebase.google.com</b> → <b>Add project</b> → đặt tên (ví dụ “QR Attendance”) → Create.</li>
-            <li>Trong project: <b>Build → Firestore Database → Create database</b> (chọn chế độ test mode).</li>
-            <li>Mở <b>Project settings → Your apps → Web app (&lt;/&gt;)</b>, đăng ký app. Firebase sẽ hiện một đoạn mã bắt đầu bằng <code>const firebaseConfig = { … }</code> — <b>không cần gõ tay từng ô</b>: sao chép <b>toàn bộ đoạn mã đó</b> rồi dán vào ô “Dán cấu hình Firebase” ngay bên dưới, app tự tách và điền đúng sáu ô cho bạn. Nếu muốn điền tay, dưới mỗi ô đã ghi sẵn giá trị của project <b>qr-att-73f4b</b> để đối chiếu.</li>
-            <li>Bấm <b>Kết nối Firebase</b>. Từ đó lớp học, sinh viên và điểm danh sẽ đồng bộ lên Firestore; trước khi kết nối, app vẫn chạy bình thường ở chế độ lưu trên máy.</li>
-          </ol>
-          <label class="f" for="fbPaste">Dán cấu hình Firebase — cách nhanh nhất: dán cả đoạn firebaseConfig vào đây</label>
-          <textarea id="fbPaste" rows="7" spellcheck="false" placeholder="Dán vào đây toàn bộ đoạn mã Firebase đưa, dạng: const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, … }"></textarea>
-          <div class="btnrow">
-            <button class="btn primary" id="btnFbPaste" type="button">Điền tự động từ đoạn đã dán</button>
-            <button class="btn" id="btnFbPrefill" type="button">Điền sẵn cấu hình qr-att-73f4b</button>
-          </div>
-          <p class="sub" style="margin-top:6px;">Nút <b>Điền sẵn</b> chép đúng sáu giá trị trong đoạn cấu hình của project <b>qr-att-73f4b</b> mà bạn đã gửi. Điền xong (bằng cách nào cũng được), kiểm tra lại sáu ô bên dưới rồi bấm <b>Kết nối Firebase</b>.</p>
-          <label class="f" for="fbApiKey">apiKey</label>
-          <input type="text" id="fbApiKey" autocomplete="off" spellcheck="false" />
-          <p class="fb-hint">Trong cấu hình bạn đã gửi, apiKey là: <code>AIzaSyAKhFxDYKQkTwxBFMRYruTUL0Y-9ds-F9I</code></p>
-          <label class="f" for="fbAuthDomain">authDomain</label>
-          <input type="text" id="fbAuthDomain" autocomplete="off" spellcheck="false" placeholder="your-project.firebaseapp.com" />
-          <p class="fb-hint">Luôn là projectId + “.firebaseapp.com”. Của bạn: <code>qr-att-73f4b.firebaseapp.com</code></p>
-          <label class="f" for="fbProjectId">projectId</label>
-          <input type="text" id="fbProjectId" autocomplete="off" spellcheck="false" />
-          <p class="fb-hint">Mã định danh của project. Của bạn: <code>qr-att-73f4b</code></p>
-          <label class="f" for="fbStorageBucket">storageBucket</label>
-          <input type="text" id="fbStorageBucket" autocomplete="off" spellcheck="false" placeholder="your-project.appspot.com" />
-          <p class="fb-hint">Của bạn: <code>qr-att-73f4b.firebasestorage.app</code></p>
-          <label class="f" for="fbSenderId">messagingSenderId</label>
-          <input type="text" id="fbSenderId" autocomplete="off" spellcheck="false" />
-          <p class="fb-hint">Chỉ gồm chữ số. Của bạn: <code>752287916403</code></p>
-          <label class="f" for="fbAppId">appId</label>
-          <input type="text" id="fbAppId" autocomplete="off" spellcheck="false" />
-          <p class="fb-hint">Của bạn: <code>1:752287916403:web:efee0c7d9dbb8fccd86506</code></p>
+          <h3>Firebase</h3>
+          <p class="sub" id="fbStatus" style="margin-top:0;">Chưa kết nối — dữ liệu chỉ lưu trên máy này.</p>
+          <p class="sub">Dán nguyên đoạn <b>firebaseConfig</b> (lấy ở Firebase → Project settings → Your apps) vào ô dưới — app tự đọc đủ 6 giá trị. <b>Mỗi thiết bị</b> (điện thoại, laptop) đều phải kết nối Firebase này thì dữ liệu mới đồng bộ qua lại.</p>
+          <label class="f" for="fbPaste">Cấu hình Firebase</label>
+          <textarea id="fbPaste" rows="6" spellcheck="false" placeholder="const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, … }"></textarea>
           <div class="btnrow">
             <button class="btn primary" id="btnFbConnect" type="button">Kết nối Firebase</button>
-            <button class="btn" id="btnFbDisconnect" type="button">Dùng chế độ lưu trên máy</button>
+            <button class="btn" id="btnFbDisconnect" type="button">Ngắt kết nối</button>
           </div>
-          <p class="sub" style="margin-top:14px; background:var(--accent-soft); border-radius:12px; padding:10px 12px;"><b>Rules:</b> nếu bạn đã dán Rules và bấm <b>Publish</b> cho project <b>qr-att-73f4b</b> (Firestore Database → Rules) thì bước Rules đã xong — không cần làm lại. Đoạn Rules app đang dùng để đối chiếu nằm ngay bên dưới; hãy chắc chắn <b>projectId ở trên đúng là qr-att-73f4b</b> rồi bấm Kết nối Firebase.</p>
-          <details open>
-            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Firestore Rules — đoạn đã dán vào Firebase (để đối chiếu)</summary>
+          <details>
+            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Firestore Rules (để đối chiếu khi cần)</summary>
             <textarea class="fb-rules" id="fbRules" readonly rows="9">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -908,30 +828,18 @@ service cloud.firestore {
         </div>
 
         <div class="card" id="cardSheet">
-          <h3>Google Sheet + GAS — sổ điểm danh</h3>
-          <p class="sub" id="gsStatus" style="margin-top:0;">Trạng thái: Chưa cài đặt — nút “Push to Google Sheet” sẽ sao chép danh sách để bạn dán tay.</p>
-          <p class="sub">Tạo <b>một file Google Sheet</b> với <b>mỗi lớp một tab</b>. Đặt tên tab <b>trùng đúng tên lớp</b> trong app, và trong tab liệt kê sinh viên — một cột Họ tên, cột kế tiếp là Mã số sinh viên. Khi bạn bấm <b>Push to Google Sheet</b> ở màn hình chính, app ghi điểm danh hôm nay của lớp đang chọn vào đúng tab của lớp đó thành <b>một cột mới</b>, ngay cạnh cột gần nhất: ô trên cùng là ngày học, bên dưới là ký hiệu của từng sinh viên, đối chiếu theo Mã số sinh viên. Các cột cũ không bị thay đổi.</p>
-          <p class="sub" style="background:var(--accent-soft); border-radius:12px; padding:10px 12px;"><b>Đẩy ngay khi quét:</b> sau khi đã cài Apps Script ở dưới, mỗi lần camera bắt được mã QR, app <b>tự đẩy ngay sinh viên đó lên Sheet</b> — không cần bấm Push cuối buổi. Lần quét đầu tiên trong ngày sẽ tự tạo cột của ngày hôm đó (mặc định các sinh viên còn lại là <b>off</b>), các lần quét sau ghi đè đúng ô của sinh viên vừa quét (đi học = để trống, đi trễ = late10 / late20 / late&gt;20). Trên màn hình camera sẽ hiện dòng “✓ Pushed to Google Sheet” để bạn biết đã ghi thành công; nếu chưa cài Apps Script, app vẫn lưu điểm danh trong máy và báo rõ là chưa đẩy được. Nút Push ở màn hình chính vẫn còn để đẩy lại cả buổi khi cần.</p>
-          <p class="sub"><b>Ký hiệu điểm danh:</b> có đi học → <b>để trống</b>; đi trễ → <b>late10</b> / <b>late20</b> / <b>late&gt;20</b>; vắng → <b>off</b>. Cuối học kỳ, sinh viên có đủ 10 ô trống là đi học đủ, không vi phạm.</p>
-          <label class="f" for="gsUrl">Link Google Sheet của bạn</label>
-          <input type="text" id="gsUrl" autocomplete="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…" />
-          <p class="sub" style="margin-top:12px;">App ghi vào Sheet thông qua một đoạn mã Google Apps Script nằm ngay trong file Sheet. Chỉ cần cài một lần:</p>
-          <ol class="sub" style="margin:6px 0 4px; padding-left:20px; line-height:1.7;">
-            <li>Trong file Sheet: <b>Extensions → Apps Script</b>. Xóa mã cũ nếu có, dán đoạn mã bên dưới vào và <b>Save</b>.</li>
-            <li>Bấm <b>Deploy → New deployment → Web app</b>: đặt <i>Execute as</i> là <b>Me</b> và <i>Who has access</i> là <b>Anyone</b>, rồi <b>Deploy</b> và sao chép <b>Web app URL</b>.</li>
-            <li>Dán URL đó vào ô bên dưới và bấm <b>Lưu cài đặt Google Sheet</b>.</li>
-            <li><b>Đã cài bản cũ trước đây?</b> Hãy thay toàn bộ mã bằng bản mới ở dưới (bản mới mới nhận được lệnh đẩy ngay khi quét), rồi bấm <b>Deploy → Manage deployments → sửa (bút chì) → Version: New version → Deploy</b> để giữ nguyên URL cũ.</li>
-          </ol>
-          <div class="gas-box" id="gasBox">
-            <h3>⭐ GAS — Mã Google Apps Script ở ĐÂY</h3>
-            <p class="sub" style="margin:0 0 4px;">Đây chính là GAS bạn đang tìm. <b>Không có file GAS riêng ở nơi khác</b> — toàn bộ mã nằm trong ô bên dưới. Bấm <b>Sao chép mã GAS</b> (hoặc tải file Code.gs), rồi dán vào <b>Sheet của bạn → Extensions → Apps Script</b>.</p>
-            <div class="btnrow">
-              <button class="btn primary" id="btnCopyCodeTop" type="button">📋 Sao chép mã GAS</button>
-              <button class="btn" id="btnDownloadGas" type="button">Tải mã GAS (file Code.gs)</button>
-            </div>
-          <details open id="gasDetails">
-            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">GAS — Mã Google Apps Script (đang hiện sẵn — bấm để thu gọn / mở ra)</summary>
-            <textarea id="gsCode" readonly rows="16" style="font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; line-height:1.5; margin-top:6px;">function doPost(e) {
+          <h3>Google Sheet</h3>
+          <p class="sub" id="gsStatus" style="margin-top:0;">Chưa cài đặt — nút “Push to Google Sheet” sẽ sao chép danh sách để dán tay.</p>
+          <p class="sub">Mỗi lớp một tab, tên tab <b>trùng đúng tên lớp</b>, trong tab có cột Họ tên + MSSV. Quét là app tự đẩy lên Sheet. Ký hiệu: <b>trống</b> = có mặt · <b>late10 / late20 / late&gt;20</b> · <b>off</b> = vắng.</p>
+          <details>
+            <summary style="font-weight:600; font-size:15px; cursor:pointer; padding:8px 0;">Đã cài rồi — xem mã GAS / sửa link</summary>
+            <p class="sub" style="margin-top:4px;">Cài lần đầu: copy mã GAS bên dưới → dán vào Sheet → <b>Extensions → Apps Script</b> → Save → <b>Deploy → Web app</b> (Execute as: Me · Who has access: Anyone) → điền 2 link dưới đây → bấm Lưu.</p>
+            <label class="f" for="gsUrl">Link Google Sheet</label>
+            <input type="text" id="gsUrl" autocomplete="off" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/…" />
+            <label class="f" for="gsWebApp">Link Web App (…/exec)</label>
+            <input type="text" id="gsWebApp" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" />
+            <label class="f">Mã GAS (Apps Script)</label>
+            <textarea id="gsCode" readonly rows="12" style="font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12px; line-height:1.5; margin-top:6px;">function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var ss = data.spreadsheetId ? SpreadsheetApp.openById(data.spreadsheetId) : SpreadsheetApp.getActiveSpreadsheet();
@@ -989,12 +897,12 @@ service cloud.firestore {
 function reply(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }</textarea>
-            <div class="btnrow"><button class="btn" id="btnCopyCode" type="button">Sao chép mã Apps Script</button></div>
+            <div class="btnrow">
+              <button class="btn" id="btnCopyCode" type="button">Sao chép mã GAS</button>
+              <button class="btn" id="btnDownloadGas" type="button">Tải file Code.gs</button>
+            </div>
+            <div class="btnrow"><button class="btn primary block" id="btnGsSave" type="button">Lưu cài đặt Google Sheet</button></div>
           </details>
-          </div>
-          <label class="f" for="gsWebApp">Link Web App của Apps Script (sau khi Deploy GAS xong, dán link …/exec vào đây)</label>
-          <input type="text" id="gsWebApp" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec" />
-          <div class="btnrow"><button class="btn primary block" id="btnGsSave" type="button">Lưu cài đặt Google Sheet</button></div>
         </div>
 
         <div class="danger-zone">
@@ -1061,7 +969,7 @@ function reply(obj) {
 
         <div class="card">
           <h3>Deliver QR Code — phát mã QR cho sinh viên</h3>
-          <p class="sub" style="margin-top:0;"><b>Chống gian lận:</b> mỗi sinh viên nhận <b>một hình PNG duy nhất</b> — bên trong hình đã có sẵn mã QR ở trên, <b>họ tên và MSSV in ngay bên dưới mã, nằm trong cùng một hình</b> (không phải chữ rời trên trang web). Sinh viên lưu đúng hình đó vào điện thoại và đưa ra khi điểm danh; họ không thể nói là mở nhầm mã của người khác, vì hình đã ghi tên và MSSV của chính họ. Mã QR cũng chứa cả họ tên + MSSV, dùng được cả năm học. Bấm <b>Tải hình thẻ</b> ở từng sinh viên để tải hình PNG hoàn chỉnh của sinh viên đó, hoặc <b>Tải tất cả thẻ</b> để tải lần lượt toàn lớp rồi gửi cho từng người. Sau khi bấm <b>Tải / xem thẻ</b>, thẻ hiện ra ngay trong app kèm nút <b>Tải xuống (PNG)</b>; nếu trình duyệt chặn tải file, nhấn giữ vào hình thẻ (điện thoại) hoặc chuột phải → Lưu hình ảnh (máy tính) để lưu.</p>
+          <p class="sub" style="margin-top:0;">Mỗi sinh viên <b>một hình PNG duy nhất</b>: mã QR ở trên, <b>họ tên + MSSV in ngay bên dưới, trong cùng một hình</b> — sinh viên không thể nói mở nhầm mã của người khác. Mã dùng cả năm học. Bấm <b>Tải / xem thẻ</b> để lấy thẻ từng người (kèm nút tải PNG trong khung xem thẻ), hoặc <b>Tải tất cả thẻ</b> cho cả lớp.</p>
           <div class="btnrow">
             <button class="btn primary" id="btnShowQr" type="button">Hiện mã QR</button>
             <button class="btn" id="btnDownloadAllQr" type="button">Tải tất cả thẻ (hình PNG)</button>
@@ -1249,32 +1157,27 @@ function reply(obj) {
       }
       function setFbStatus() {
         $("fbStatus").textContent = db && fbCfg
-          ? "Trạng thái: Đã kết nối tới project Firebase “" + fbCfg.projectId + "”. Lớp học, sinh viên và điểm danh đang đồng bộ lên Firestore."
-          : "Trạng thái: Chế độ lưu trên máy — dữ liệu chỉ lưu trên thiết bị này.";
+          ? "Đã kết nối project “" + fbCfg.projectId + "” — dữ liệu đồng bộ lên mây, thiết bị nào kết nối cùng project này cũng thấy."
+          : "Chưa kết nối — dữ liệu chỉ lưu trên máy này.";
       }
-      function fillFbInputs(cfg) {
-        $("fbApiKey").value = cfg.apiKey || "";
-        $("fbAuthDomain").value = cfg.authDomain || "";
-        $("fbProjectId").value = cfg.projectId || "";
-        $("fbStorageBucket").value = cfg.storageBucket || "";
-        $("fbSenderId").value = cfg.messagingSenderId || "";
-        $("fbAppId").value = cfg.appId || "";
+      /* One paste box is the whole Firebase form: the snippet the
+         teacher copies from the console is kept in the box, and the
+         Connect button extracts the six values from it on the spot. */
+      function showFbConfig(cfg) {
+        $("fbPaste").value = "const firebaseConfig = " + JSON.stringify(cfg, null, 2) + ";";
       }
-      function readFbInputs() {
-        return {
-          apiKey: $("fbApiKey").value.trim(),
-          authDomain: $("fbAuthDomain").value.trim(),
-          projectId: $("fbProjectId").value.trim(),
-          storageBucket: $("fbStorageBucket").value.trim(),
-          messagingSenderId: $("fbSenderId").value.trim(),
-          appId: $("fbAppId").value.trim()
-        };
+      function parseFbConfig(text) {
+        var keys = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+        var found = {}, n = 0;
+        keys.forEach(function (k) {
+          var m = String(text || "").match(new RegExp(k + "\\s*:\\s*[\"']([^\"']+)[\"']"));
+          if (m) { found[k] = m[1]; n++; }
+        });
+        return n ? found : null;
       }
-      /* The teacher's own Firebase web config for project qr-att-73f4b,
-         from the console snippet they pasted into the chat. A web
-         config identifies the project (it is not a password), so the
-         "Điền sẵn" button can drop all six values into the fields —
-         nothing to retype, nothing to mismatch. */
+      /* The teacher's own Firebase web config for project qr-att-73f4b.
+         A web config identifies the project (it is not a password), so
+         an empty box falls back to it — one tap is enough to connect. */
       var FB_PREFILL = {
         apiKey: "AIzaSyAKhFxDYKQkTwxBFMRYruTUL0Y-9ds-F9I",
         authDomain: "qr-att-73f4b.firebaseapp.com",
@@ -1283,26 +1186,12 @@ function reply(obj) {
         messagingSenderId: "752287916403",
         appId: "1:752287916403:web:efee0c7d9dbb8fccd86506"
       };
-      /* Paste-the-whole-snippet: pull each "key: "value"" pair out of
-         whatever the teacher copied from the Firebase console (the
-         import lines and comments around it are ignored). */
-      function applyFbPaste() {
+      function configFromPaste() {
         var text = $("fbPaste").value;
-        if (!text.trim()) { toast("Hãy dán đoạn firebaseConfig vào ô trước đã.", true); return; }
-        var keys = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
-        var found = {}, n = 0;
-        keys.forEach(function (k) {
-          var m = text.match(new RegExp(k + "\\s*:\\s*[\"']([^\"']+)[\"']"));
-          if (m) { found[k] = m[1]; n++; }
-        });
-        if (!found.apiKey && !found.projectId) {
-          toast("Không đọc được cấu hình trong đoạn đã dán — hãy sao chép nguyên đoạn firebaseConfig (gồm cả hai dấu { }).", true);
-          return;
-        }
-        var cur = readFbInputs();
-        keys.forEach(function (k) { if (found[k]) cur[k] = found[k]; });
-        fillFbInputs(cur);
-        toast("Đã điền " + n + "/6 ô từ đoạn cấu hình — kiểm tra lại rồi bấm “Kết nối Firebase”.");
+        if (!text.trim()) return FB_PREFILL;
+        var cfg = parseFbConfig(text);
+        if (!cfg || !cfg.apiKey || !cfg.projectId || !cfg.appId) return null;
+        return cfg;
       }
       function connectFirebase(cfg, silent) {
         if (typeof firebase === "undefined" || !firebase.initializeApp) {
@@ -1658,23 +1547,6 @@ function reply(obj) {
       function switchMode(mode) {
         if (mode === "display") openDisplay();
         else { renderSetup(); show("setup"); }
-      }
-      /* GAS discoverability: jump straight to the Apps Script code,
-         force its <details> open, scroll it into view and flash it —
-         the teacher should never have to hunt for it again. */
-      function gotoGas() {
-        if (currentView !== "setup") { renderSetup(); show("setup"); }
-        var details = $("gasDetails"); if (details) details.open = true;
-        var box = $("gasBox"); if (!box) return;
-        setTimeout(function () {
-          box.scrollIntoView({ behavior: "smooth", block: "start" });
-          box.classList.remove("flash"); void box.offsetWidth; box.classList.add("flash");
-        }, 80);
-      }
-      function gotoFirebase() {
-        if (currentView !== "setup") { renderSetup(); show("setup"); }
-        var card = $("cardFirebase"); if (!card) return;
-        setTimeout(function () { card.scrollIntoView({ behavior: "smooth", block: "start" }); }, 80);
       }
       function downloadGas() {
         var code = $("gsCode") ? $("gsCode").value : "";
@@ -2108,8 +1980,8 @@ function reply(obj) {
         var el = $("gsStatus");
         if (!el) return;
         el.textContent = (sheetCfg.sheetUrl && sheetCfg.webAppUrl)
-          ? "Trạng thái: Đã sẵn sàng — nút “Push to Google Sheet” sẽ ghi vào Sheet của bạn, trong tab trùng tên lớp."
-          : "Trạng thái: Chưa cài đặt — nút “Push to Google Sheet” sẽ sao chép danh sách để bạn dán tay.";
+          ? "Đã cài — quét là tự đẩy lên Sheet, vào tab trùng tên lớp."
+          : "Chưa cài — Push sẽ sao chép danh sách để dán tay. Mở mục dưới để cài GAS.";
       }
       function extractSheetId(url) {
         var m = String(url || "").match(/spreadsheets\/d\/([-\w]+)/);
@@ -2701,24 +2573,19 @@ function reply(obj) {
         loadLocal();
         var savedCfg = null;
         try { savedCfg = JSON.parse(localStorage.getItem(LS_CFG) || "null"); } catch (e) {}
-        if (savedCfg) fillFbInputs(savedCfg);
+        if (savedCfg) showFbConfig(savedCfg);
         renderHome(); renderSetup(); setFbStatus();
         if (savedCfg && savedCfg.apiKey && savedCfg.projectId) connectFirebase(savedCfg, true);
 
         $("btnFbConnect").addEventListener("click", function () {
-          var cfg = readFbInputs();
-          if (!cfg.apiKey || !cfg.projectId || !cfg.appId) {
-            toast("Hãy điền ít nhất apiKey, projectId và appId lấy từ cài đặt project Firebase của bạn.", true);
+          var cfg = configFromPaste();
+          if (!cfg) {
+            toast("Không đọc được cấu hình — hãy dán nguyên đoạn firebaseConfig (gồm cả hai dấu { }).", true);
             return;
           }
           connectFirebase(cfg, false);
         });
         $("btnFbDisconnect").addEventListener("click", disconnectFirebase);
-        $("btnFbPaste").addEventListener("click", applyFbPaste);
-        $("btnFbPrefill").addEventListener("click", function () {
-          fillFbInputs(FB_PREFILL);
-          toast("Đã điền sẵn cấu hình của project qr-att-73f4b — bấm “Kết nối Firebase” để kết nối.");
-        });
 
         $("classSelect").addEventListener("change", function () {
           state.selectedClassId = this.value || null;
@@ -2754,18 +2621,12 @@ function reply(obj) {
             : "Đã lưu. Hãy điền đủ cả hai link để bật tính năng đẩy dữ liệu.");
         });
         $("btnCopyCode").addEventListener("click", function () {
-          copyText($("gsCode").value, "Đã sao chép mã Apps Script — dán vào Extensions → Apps Script trong Sheet của bạn.");
-        });
-        $("btnCopyCodeTop").addEventListener("click", function () {
           copyText($("gsCode").value, "Đã sao chép mã GAS — dán vào Sheet → Extensions → Apps Script, rồi Save và Deploy → Web app.");
         });
         $("btnCopyRules").addEventListener("click", function () {
           copyText($("fbRules").value, "Đã sao chép Firestore Rules — dán vào Firebase → Firestore Database → Rules → Publish.");
         });
         $("btnDownloadGas").addEventListener("click", downloadGas);
-        $("btnDownloadGasTop").addEventListener("click", downloadGas);
-        $("btnGotoGas").addEventListener("click", gotoGas);
-        $("btnGotoFirebase").addEventListener("click", gotoFirebase);
         $("btnCsv").addEventListener("click", exportCSV);
 
         $("scanBack").addEventListener("click", function () {
