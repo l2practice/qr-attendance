@@ -600,6 +600,7 @@
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4" rx=".5"/><rect x="13" y="7" width="4" height="4" rx=".5"/><rect x="7" y="13" width="4" height="4" rx=".5"/><path d="M13 13h2v2h-2zM17 15h2v2h-2zM15 17h2v2h-2z"/></svg>
           Open Camera to scan
         </button>
+        <p class="sub" id="scanHint" style="display:none; margin:10px 2px 0; font-weight:600;">No class yet — tap the button and you'll be taken to Set Up to create your first class. Scanning opens as soon as a class with students exists.</p>
 
         <div class="card" id="todayCard">
           <div id="todayBody"></div>
@@ -1593,7 +1594,13 @@ function reply(obj) {
         }
         renderMode();
         renderHomeStats();
-        $("btnScan").disabled = !cls;
+        /* The scan button is NEVER disabled. A disabled button gives no
+           feedback at all when tapped — the teacher just sees "nothing
+           happens". Instead the button always responds: with no class
+           (or a class with no students) openScan() explains what is
+           missing and takes the teacher straight to where to fix it. */
+        $("btnScan").disabled = false;
+        $("scanHint").style.display = cls ? "none" : "block";
       }
       function renderMode() {
         var late = state.mode === "tardiness";
@@ -2047,7 +2054,19 @@ function reply(obj) {
       var SCAN_DEBOUNCE_MS = 4000;
       function openScan() {
         var cls = selectedClass();
-        if (!cls) { toast("Set up a class first.", true); return; }
+        if (!cls) {
+          /* No silent dead end: say exactly what is missing and go
+             straight to Set Up so the teacher can create the class. */
+          toast("No class yet — create a class in Set Up first, then scanning will open.", true);
+          renderSetup();
+          show("setup");
+          return;
+        }
+        if (!cls.students.length) {
+          toast("This class has no students yet — add the student list first, then scanning will open.", true);
+          openClass(cls.id);
+          return;
+        }
         reopenSession(cls); /* scanning again after Done re-opens today's session on every screen */
         scanLog = [];
         recentScans = {};
@@ -2066,8 +2085,12 @@ function reply(obj) {
         startScanner();
       }
       function startScanner() {
+        /* Immediate visible feedback the moment the scan screen opens,
+           so a slow camera start never looks like "nothing happened". */
+        $("camMsg").textContent = "Starting the camera… if the browser asks, tap Allow so the app can use it.";
         if (typeof Html5Qrcode === "undefined") {
           $("camMsg").textContent = "The scanner library could not load. Check your connection, or enter student IDs manually below.";
+          toast("Scanner library failed to load — check your connection, or enter student IDs manually below.", true);
           return;
         }
         try {
@@ -2098,13 +2121,17 @@ function reply(obj) {
               recordScan(decoded);
             },
             function () { /* per-frame decode misses are normal */ }
-          ).catch(function () {
+          ).then(function () {
+            if (scannerRunning) $("camMsg").textContent = "";
+          }).catch(function () {
             scannerRunning = false;
             $("camMsg").textContent = "Camera is unavailable or permission was denied. You can still record students by entering their student ID below.";
+            toast("Camera could not start — permission denied or no camera. You can still record students by student ID below.", true);
           });
         } catch (e) {
           scannerRunning = false;
           $("camMsg").textContent = "Camera is unavailable on this device. You can still record students by entering their student ID below.";
+          toast("Camera is unavailable on this device — you can still record students by student ID below.", true);
         }
       }
       function stopScanner() {
