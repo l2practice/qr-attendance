@@ -202,7 +202,8 @@
         border: 0; padding: 0; cursor: pointer; font-size: 16px;
       }
       .mono.sm { width: 26px; height: 26px; font-size: 11px; margin-right: 8px; vertical-align: middle; }
-      #scanSub { display: flex; align-items: center; }
+      #scanSub { display: flex; align-items: center; margin: 0; font-size: 13.5px; white-space: nowrap; overflow: hidden; }
+      #scanSub > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 
       /* Class progress: how much of the class is in (green) and late (amber) */
       .pbar { display: flex; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 16px; }
@@ -332,16 +333,19 @@
       .scan-overlay .so-sheet.ok { color: #7be0a4; }
       .scan-overlay .so-sheet.wait { color: #f5c75a; }
       .scan-overlay .so-sheet.local { color: #cfd6d2; opacity: .85; }
-      .scan-progress {
-        display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-        margin-top: 10px; padding: 12px 16px;
-        background: var(--surface); border-radius: 16px;
-      }
-      .scan-progress b { font-size: 30px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
-      .scan-progress span { font-size: 14px; font-weight: 500; color: var(--muted); }
-      .scan-progress .queue { width: 100%; font-size: 13px; font-weight: 500; color: var(--muted); }
+      /* The camera sits right under the top bar (the phone's camera is at
+         the top edge); class, subject, start time and the count sit below
+         it in one compact panel, so camera and info fit in one screen. */
+      .scan-info { background: var(--surface); border-radius: 16px; padding: 10px 14px; margin-top: 8px; }
+      .scan-progress { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+      .scan-progress b { font-size: 26px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+      .scan-progress span { font-size: 13.5px; font-weight: 500; color: var(--muted); }
+      .scan-progress .queue { width: 100%; font-size: 12.5px; font-weight: 500; color: var(--muted); line-height: 1.35; }
       .scan-progress .queue.ok { color: var(--green); }
-      #reader { border-radius: var(--radius); overflow: hidden; background: #000; min-height: 240px; }
+      #view-scan .backbar { margin-bottom: 4px; padding-top: 6px; padding-bottom: 6px; }
+      #view-scan .backbar h1 { font-size: 19px; }
+      #view-scan .backbtn { min-height: 40px; }
+      #reader { border-radius: var(--radius); overflow: hidden; background: #000; min-height: 240px; position: relative; }
       #reader video { width: 100% !important; }
       .scanlog { list-style: none; margin: 12px 0 0; padding: 0; }
       .scanlog li {
@@ -763,21 +767,23 @@
           <button class="backbtn" id="scanBack" type="button">← Done</button>
           <h1 id="scanTitle">Scanning</h1>
         </div>
-        <p class="sub" id="scanSub" style="margin:0 0 6px;"></p>
-        <div class="scan-progress" aria-live="polite">
-          <b id="scanCount">0 / 0</b>
-          <span id="scanRemaining">scanned</span>
-          <span class="queue" id="scanQueueStatus"></span>
-        </div>
         <div class="reader-wrap">
-          <div id="reader" style="margin-top:12px;"></div>
+          <div id="reader"></div>
           <div id="scanOverlay" class="scan-overlay" aria-live="polite">
             <div class="so-name" id="soName">—</div>
             <div class="so-row"><span class="so-id" id="soId">—</span><span class="chip" id="soChip">—</span></div>
             <div class="so-sheet local" id="soSheet">Saved in app</div>
           </div>
         </div>
-        <p class="sub" id="camMsg" style="margin-top:10px;"></p>
+        <div class="scan-info">
+          <p class="sub" id="scanSub"></p>
+          <div class="scan-progress" aria-live="polite">
+            <b id="scanCount">0 / 0</b>
+            <span id="scanRemaining">scanned</span>
+            <span class="queue" id="scanQueueStatus"></span>
+          </div>
+        </div>
+        <p class="sub" id="camMsg" style="margin-top:8px;"></p>
 
         <div class="card">
           <h3>No QR code? Enter the student ID</h3>
@@ -1577,7 +1583,7 @@ function reply(obj) {
         if (!el) return;
         if (!sheetConnected()) {
           el.className = "queue";
-          el.textContent = "Google Sheet not connected — scans are saved in the app only.";
+          el.textContent = "Sheet not connected · saved in the app only";
           return;
         }
         var pending = sheetQueue.length + (sheetQueueRunning ? 1 : 0);
@@ -2363,6 +2369,29 @@ function reply(obj) {
         renderScanProgress();
         startScanner();
       }
+      /* Show a centred window of the camera feed that leaves room for the
+         info panel below. The feed itself is not scaled (the scanner's own
+         maths stays valid): the video and the scanner's shading layer are
+         shifted together, so the scan box stays in the middle of what is
+         visible. */
+      function fitReader() {
+        var rd = $("reader"), v = rd && rd.querySelector("video");
+        if (!v || currentView !== "scan") return;
+        var sh = document.getElementById("qr-shaded-region");
+        v.style.marginTop = "0px"; if (sh) sh.style.top = "0px";
+        rd.style.height = "auto";
+        var vh = v.offsetHeight;
+        if (!vh) return;
+        var room = Math.max(300, window.innerHeight - 250);
+        var h = Math.min(vh, room);
+        var dy = Math.max(0, (vh - h) / 2);
+        rd.style.height = h + "px";
+        v.style.marginTop = (-dy) + "px";
+        if (sh) sh.style.top = (-dy) + "px";
+      }
+      function scheduleFitReader() { [0, 250, 800, 1800].forEach(function (t) { setTimeout(fitReader, t); }); }
+      window.addEventListener("resize", fitReader);
+      window.addEventListener("orientationchange", scheduleFitReader);
       function startScanner() {
         /* Immediate visible feedback the moment the scan screen opens,
            so a slow camera start never looks like "nothing happened". */
@@ -2401,6 +2430,7 @@ function reply(obj) {
             },
             function () { /* per-frame decode misses are normal */ }
           ).then(function () {
+            scheduleFitReader();
             if (scannerRunning) $("camMsg").textContent = "";
           }).catch(function () {
             scannerRunning = false;
@@ -2414,6 +2444,7 @@ function reply(obj) {
         }
       }
       function stopScanner() {
+        var rdEl = $("reader"); if (rdEl) rdEl.style.height = "";
         if (scanner && scannerRunning) {
           scannerRunning = false;
           scanner.stop().then(function () { try { scanner.clear(); } catch (e) {} }).catch(function () {});
