@@ -321,13 +321,18 @@
       /* ——— Settings lists ——— */
       .classrow {
         display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-        background: var(--surface);
-        -webkit-backdrop-filter: blur(18px) saturate(180%);
-        backdrop-filter: blur(18px) saturate(180%);
-        border: 0; border-radius: 18px; box-shadow: var(--shadow-card);
-        padding: 15px 16px; margin-bottom: 10px;
+        /* Each class gets its own colour (--cc, set per row in
+           renderSetup): tinted fill, coloured edge and bar, so the list
+           stands out from the page background and rows are told apart. */
+        --cc: #0a84ff;
+        background: var(--surface-solid);
+        background: color-mix(in srgb, var(--cc) 16%, var(--surface-solid));
+        border: 1.5px solid var(--cc); border-radius: 18px;
+        box-shadow: inset 7px 0 0 var(--cc), var(--shadow-card);
+        padding: 15px 16px 15px 22px; margin-bottom: 10px;
         transition: transform .35s var(--spring), filter .2s;
       }
+      .classrow b { color: var(--ink); }
       .classrow:active { transform: scale(.98); transition: transform 100ms ease-out; filter: brightness(.98); }
       .classrow .grow { flex: 1 1 auto; min-width: 0; }
       .classrow b { display: block; font-size: 16.5px; font-weight: 600; letter-spacing: -0.012em; }
@@ -2413,9 +2418,11 @@ function reply(obj) {
       function renderSetup() {
         var list = $("classList");
         list.innerHTML = "";
-        state.classes.forEach(function (c) {
+        var CLASS_COLORS = ["#0a84ff", "#ff9500", "#af52de", "#ff2d55", "#30b0c7", "#34c759", "#5856d6", "#e6a700"];
+        state.classes.forEach(function (c, idx) {
           var b = document.createElement("button");
           b.type = "button"; b.className = "classrow";
+          b.style.setProperty("--cc", CLASS_COLORS[idx % CLASS_COLORS.length]);
           var daysTxt = c.days.slice().sort(function (a, bb) { return DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(bb); })
             .map(function (d) { return DAY_NAMES_VI[d]; }).join(" ");
           b.innerHTML = '<span class="grow"><b>' + esc(c.name) + '</b><span>' + esc(c.subject) + ' · ' + esc(daysTxt) + ' · bắt đầu ' + esc(c.start) + ' · ' + c.students.length + ' sinh viên</span></span><span class="chev">›</span>';
