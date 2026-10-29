@@ -141,7 +141,7 @@
       .card h2 { margin: 0 0 4px; font-size: 21px; font-weight: 700; letter-spacing: -0.018em; line-height: 1.2; }
       .card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.012em; }
       /* GAS must be impossible to miss: a bordered, tinted block inside
-         the Sheet card, plus a jump card at the very top of Set Up. */
+         the Sheet card, plus a jump card at the very top of Settings. */
       .gas-box {
         border: 2px solid var(--accent); background: var(--accent-soft);
         border-radius: 16px; padding: 16px; margin-top: 16px;
@@ -328,7 +328,7 @@
       .scanlog .who span { font-size: 13px; color: var(--muted); }
       .scanlog .when { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-      /* ——— Set Up lists ——— */
+      /* ——— Settings lists ——— */
       .classrow {
         display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
         background: var(--surface);
@@ -377,7 +377,7 @@
       a.dl:active { opacity: .55; }
       /* Unified anti-fraud card preview: QR + name + ID inside ONE bordered
          white card — exactly what the downloaded PNG contains, so what the
-         teacher sees in Set Up is what the student receives. */
+         teacher sees in Settings is what the student receives. */
       .cardimg {
         background: #fff; color: #111; border: 1.5px solid #d1d1d6; border-radius: 14px;
         padding: 10px 10px 9px; width: 148px; text-align: center;
@@ -387,6 +387,14 @@
       .cardimg b { display: block; font-size: 13.5px; line-height: 1.25; margin-top: 8px; overflow-wrap: anywhere; }
       .cardimg span { display: block; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; letter-spacing: .02em; }
       .cardimg small { display: block; font-size: 10.5px; color: #636366; margin-top: 2px; }
+      /* QR card viewer: the generated card image shown full-size inside
+         a sheet, with a real download link — the guaranteed path when a
+         browser or in-app webview swallows a scripted download click. */
+      .qr-view-img { display: block; width: 100%; max-width: 330px; margin: 2px auto 14px; border-radius: 10px; box-shadow: 0 8px 28px rgba(0, 0, 0, .2); }
+      a.btn { text-decoration: none; text-align: center; }
+      /* Firebase field hints: the expected value, shown under its field */
+      .fb-hint { font-size: 12.5px; color: var(--muted); margin: 3px 2px 0; line-height: 1.5; }
+      .fb-hint code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; background: var(--surface-3); padding: 1px 5px; border-radius: 5px; color: inherit; word-break: break-all; }
 
       .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: 15px; }
       .divider { border: 0; border-top: .5px solid var(--line); margin: 22px 0; }
@@ -512,7 +520,7 @@
         .display-select { flex: 1 1 100%; }
       }
 
-      /* ——— Laptop mode switch: Setup ⇄ Display ———
+      /* ——— Laptop mode switch: Settings ⇄ Live Observation ———
          One big, always-visible toggle on the laptop screens. The
          teacher types rosters in Setup (keyboard), then flips to the
          projector grid with one click — and back just as fast. */
@@ -617,16 +625,16 @@
       <section id="view-home" class="view active">
         <p class="dateline" id="dateline">—</p>
 
-        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Setup hoặc Hiển thị">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Setup</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Hiển thị</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
 
         <button class="scan-cta" id="btnScan" type="button">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4" rx=".5"/><rect x="13" y="7" width="4" height="4" rx=".5"/><rect x="7" y="13" width="4" height="4" rx=".5"/><path d="M13 13h2v2h-2zM17 15h2v2h-2zM15 17h2v2h-2z"/></svg>
           Open Camera to scan
         </button>
-        <p class="sub" id="scanHint" style="display:none; margin:10px 2px 0; font-weight:600;">No class yet — tap the button and you'll be taken to Set Up to create your first class. Scanning opens as soon as a class with students exists.</p>
+        <p class="sub" id="scanHint" style="display:none; margin:10px 2px 0; font-weight:600;">No class yet — tap the button and you'll be taken to Settings to create your first class. Scanning opens as soon as a class with students exists.</p>
 
         <div class="card" id="todayCard">
           <div id="todayBody"></div>
@@ -662,31 +670,28 @@
         <div class="btnrow">
           <button class="btn block" id="btnDisplay" type="button" style="padding:14px;">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/></svg>
-            Projector Display
+            Live Observation
           </button>
           <button class="btn block" id="btnSetup" type="button" style="padding:14px;">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Set Up
+            Settings
           </button>
         </div>
-        <div class="btnrow">
-          <button class="btn primary block" id="btnHomeGas" type="button" style="padding:14px;">⭐ Mã GAS (Google Apps Script) — bấm để tới thẳng mã dán vào Sheet</button>
-        </div>
-        <p class="sub" style="margin:10px 2px 0;">On a laptop, use the big <b>Setup ⇄ Hiển thị</b> switch above: type the roster in Setup, then flip to Hiển thị for the projector. The whole class is shown as a grid — a scanned student's cell turns <b>green</b> (late = <b>yellow</b>, with late10 / late20 / late&gt;20 under the name), and after you tap <b>Done</b> everyone not scanned turns <b>red · off</b>. It syncs in real time through Firebase (connect it once in Set Up); on this device alone it follows scans made here.</p>
+        <p class="sub" style="margin:10px 2px 0;">On a laptop, use the big <b>Settings ⇄ Live Observation</b> switch above: type the roster in Settings, then flip to Live Observation for the projector. The whole class is shown as a grid — a scanned student's cell turns <b>green</b> (late = <b>yellow</b>, with late10 / late20 / late&gt;20 under the name), and after you tap <b>Done</b> everyone not scanned turns <b>red · off</b>. It syncs in real time through Firebase (connect it once in Settings); on this device alone it follows scans made here.</p>
       </section>
 
       <!-- ============ PROJECTOR DISPLAY (desktop) ============ -->
       <section id="view-display" class="view">
         <div class="backbar">
           <button class="backbtn" id="displayBack" type="button">← Back</button>
-          <h1>Projector Display</h1>
+          <h1>Live Observation</h1>
           <span style="flex:1 1 auto;"></span>
           <span class="live-dot" id="displayLive"><i aria-hidden="true"></i><span id="displayLiveText">Local only</span></span>
         </div>
 
-        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Setup hoặc Hiển thị">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Setup</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Hiển thị</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
 
         <div class="display-head">
@@ -792,14 +797,14 @@
       <section id="view-setup" class="view">
         <div class="backbar">
           <button class="backbtn" id="setupBack" type="button">← Back</button>
-          <h1>Set Up</h1>
+          <h1>Settings</h1>
         </div>
 
-        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Setup hoặc Hiển thị">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Setup</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Hiển thị</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
-        <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập và sửa danh sách lớp ở chế độ <b>Setup</b> cho nhanh bằng bàn phím, xong bấm <b>Hiển thị</b> ở thanh trên để chuyển ngay sang lưới chiếu — bấm qua lại bất cứ lúc nào, không mất dữ liệu đang nhập dở trong lớp đã lưu.</p>
+        <p class="sub" style="margin:0 2px 14px;">Trên laptop: nhập và sửa danh sách lớp ở chế độ <b>Settings</b> cho nhanh bằng bàn phím, xong bấm <b>Live Observation</b> ở thanh trên để chuyển ngay sang lưới chiếu — bấm qua lại bất cứ lúc nào, không mất dữ liệu đang nhập dở trong lớp đã lưu.</p>
 
         <div class="setup-jump" id="setupJump">
           <h3>Bạn đang tìm GAS? — GAS ở ngay đây 👇</h3>
@@ -838,7 +843,7 @@
 
         <div class="card">
           <h3>Màn hình chiếu (desktop) — sinh viên thấy ngay khi được quét</h3>
-          <p class="sub" style="margin-top:0;">Mở app này trên <b>laptop / máy tính lớp học</b> (máy nối với máy chiếu). Thanh chuyển chế độ lớn ở đầu mỗi màn hình cho phép bạn bấm qua lại ngay trên laptop: <b>Setup</b> để nhập và sửa danh sách lớp bằng bàn phím cho nhanh, <b>Hiển thị</b> để chiếu. Ở chế độ Hiển thị, toàn bộ lớp hiện thành <b>lưới — mỗi sinh viên một ô</b>: quét trúng (có mặt) thì ô đổi <b>xanh lá</b> ngay; quét trễ thì ô đổi <b>vàng</b> và hiện mức <b>late10 / late20 / late&gt;20</b> ngay bên dưới tên; sinh viên vừa quét còn hiện thật to ở đầu màn hình kèm MSSV và giờ quét.</p>
+          <p class="sub" style="margin-top:0;">Mở app này trên <b>laptop / máy tính lớp học</b> (máy nối với máy chiếu). Thanh chuyển chế độ lớn ở đầu mỗi màn hình cho phép bạn bấm qua lại ngay trên laptop: <b>Settings</b> để nhập và sửa danh sách lớp bằng bàn phím cho nhanh, <b>Live Observation</b> để chiếu. Ở chế độ Live Observation, toàn bộ lớp hiện thành <b>lưới — mỗi sinh viên một ô</b>: quét trúng (có mặt) thì ô đổi <b>xanh lá</b> ngay; quét trễ thì ô đổi <b>vàng</b> và hiện mức <b>late10 / late20 / late&gt;20</b> ngay bên dưới tên; sinh viên vừa quét còn hiện thật to ở đầu màn hình kèm MSSV và giờ quét.</p>
           <ol class="sub" style="margin:6px 0 4px; padding-left:20px; line-height:1.7;">
             <li><b>Để điện thoại và máy chiếu đồng bộ thời gian thực, cả hai thiết bị phải kết nối cùng một project Firebase</b> (mục ngay bên dưới): nhập cùng cấu hình Firebase trên điện thoại và trên máy tính lớp, rồi bấm Kết nối Firebase ở cả hai nơi.</li>
             <li>Sau đó cứ quét bình thường trên điện thoại — từng ô trên lưới laptop tự đổi màu ngay khi có sinh viên mới, bạn không cần chạm vào máy tính.</li>
@@ -855,21 +860,34 @@
           <ol class="sub" style="margin:6px 0 4px; padding-left:20px; line-height:1.7;">
             <li>Vào <b>console.firebase.google.com</b> → <b>Add project</b> → đặt tên (ví dụ “QR Attendance”) → Create.</li>
             <li>Trong project: <b>Build → Firestore Database → Create database</b> (chọn chế độ test mode).</li>
-            <li>Mở <b>Project settings → Your apps → Web app (&lt;/&gt;)</b>, đăng ký app, rồi sao chép sáu giá trị <b>firebaseConfig</b> vào các ô bên dưới.</li>
+            <li>Mở <b>Project settings → Your apps → Web app (&lt;/&gt;)</b>, đăng ký app. Firebase sẽ hiện một đoạn mã bắt đầu bằng <code>const firebaseConfig = { … }</code> — <b>không cần gõ tay từng ô</b>: sao chép <b>toàn bộ đoạn mã đó</b> rồi dán vào ô “Dán cấu hình Firebase” ngay bên dưới, app tự tách và điền đúng sáu ô cho bạn. Nếu muốn điền tay, dưới mỗi ô đã ghi sẵn giá trị của project <b>qr-att-73f4b</b> để đối chiếu.</li>
             <li>Bấm <b>Kết nối Firebase</b>. Từ đó lớp học, sinh viên và điểm danh sẽ đồng bộ lên Firestore; trước khi kết nối, app vẫn chạy bình thường ở chế độ lưu trên máy.</li>
           </ol>
+          <label class="f" for="fbPaste">Dán cấu hình Firebase — cách nhanh nhất: dán cả đoạn firebaseConfig vào đây</label>
+          <textarea id="fbPaste" rows="7" spellcheck="false" placeholder="Dán vào đây toàn bộ đoạn mã Firebase đưa, dạng: const firebaseConfig = { apiKey: &quot;…&quot;, authDomain: &quot;…&quot;, projectId: &quot;…&quot;, … }"></textarea>
+          <div class="btnrow">
+            <button class="btn primary" id="btnFbPaste" type="button">Điền tự động từ đoạn đã dán</button>
+            <button class="btn" id="btnFbPrefill" type="button">Điền sẵn cấu hình qr-att-73f4b</button>
+          </div>
+          <p class="sub" style="margin-top:6px;">Nút <b>Điền sẵn</b> chép đúng sáu giá trị trong đoạn cấu hình của project <b>qr-att-73f4b</b> mà bạn đã gửi. Điền xong (bằng cách nào cũng được), kiểm tra lại sáu ô bên dưới rồi bấm <b>Kết nối Firebase</b>.</p>
           <label class="f" for="fbApiKey">apiKey</label>
           <input type="text" id="fbApiKey" autocomplete="off" spellcheck="false" />
+          <p class="fb-hint">Trong cấu hình bạn đã gửi, apiKey là: <code>AIzaSyAKhFxDYKQkTwxBFMRYruTUL0Y-9ds-F9I</code></p>
           <label class="f" for="fbAuthDomain">authDomain</label>
           <input type="text" id="fbAuthDomain" autocomplete="off" spellcheck="false" placeholder="your-project.firebaseapp.com" />
+          <p class="fb-hint">Luôn là projectId + “.firebaseapp.com”. Của bạn: <code>qr-att-73f4b.firebaseapp.com</code></p>
           <label class="f" for="fbProjectId">projectId</label>
           <input type="text" id="fbProjectId" autocomplete="off" spellcheck="false" />
+          <p class="fb-hint">Mã định danh của project. Của bạn: <code>qr-att-73f4b</code></p>
           <label class="f" for="fbStorageBucket">storageBucket</label>
           <input type="text" id="fbStorageBucket" autocomplete="off" spellcheck="false" placeholder="your-project.appspot.com" />
+          <p class="fb-hint">Của bạn: <code>qr-att-73f4b.firebasestorage.app</code></p>
           <label class="f" for="fbSenderId">messagingSenderId</label>
           <input type="text" id="fbSenderId" autocomplete="off" spellcheck="false" />
+          <p class="fb-hint">Chỉ gồm chữ số. Của bạn: <code>752287916403</code></p>
           <label class="f" for="fbAppId">appId</label>
           <input type="text" id="fbAppId" autocomplete="off" spellcheck="false" />
+          <p class="fb-hint">Của bạn: <code>1:752287916403:web:efee0c7d9dbb8fccd86506</code></p>
           <div class="btnrow">
             <button class="btn primary" id="btnFbConnect" type="button">Kết nối Firebase</button>
             <button class="btn" id="btnFbDisconnect" type="button">Dùng chế độ lưu trên máy</button>
@@ -993,9 +1011,9 @@ function reply(obj) {
           <h1 id="cdTitle">Class</h1>
         </div>
 
-        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Setup hoặc Hiển thị">
-          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Setup</span><small>Nhập / sửa danh sách lớp</small></button>
-          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Hiển thị</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
+        <div class="mode-switch" role="group" aria-label="Chuyển chế độ trên laptop: Settings hoặc Live Observation">
+          <button type="button" class="ms-btn" data-switch="setup"><span><span class="ms-ico" aria-hidden="true">✎</span> Settings</span><small>Nhập / sửa danh sách lớp</small></button>
+          <button type="button" class="ms-btn" data-switch="display"><span><span class="ms-ico" aria-hidden="true">▦</span> Live Observation</span><small>Chiếu lưới lớp lên máy chiếu</small></button>
         </div>
 
         <div class="card">
@@ -1043,7 +1061,7 @@ function reply(obj) {
 
         <div class="card">
           <h3>Deliver QR Code — phát mã QR cho sinh viên</h3>
-          <p class="sub" style="margin-top:0;"><b>Chống gian lận:</b> mỗi sinh viên nhận <b>một hình PNG duy nhất</b> — bên trong hình đã có sẵn mã QR ở trên, <b>họ tên và MSSV in ngay bên dưới mã, nằm trong cùng một hình</b> (không phải chữ rời trên trang web). Sinh viên lưu đúng hình đó vào điện thoại và đưa ra khi điểm danh; họ không thể nói là mở nhầm mã của người khác, vì hình đã ghi tên và MSSV của chính họ. Mã QR cũng chứa cả họ tên + MSSV, dùng được cả năm học. Bấm <b>Tải hình thẻ</b> ở từng sinh viên để tải hình PNG hoàn chỉnh của sinh viên đó, hoặc <b>Tải tất cả thẻ</b> để tải lần lượt toàn lớp rồi gửi cho từng người.</p>
+          <p class="sub" style="margin-top:0;"><b>Chống gian lận:</b> mỗi sinh viên nhận <b>một hình PNG duy nhất</b> — bên trong hình đã có sẵn mã QR ở trên, <b>họ tên và MSSV in ngay bên dưới mã, nằm trong cùng một hình</b> (không phải chữ rời trên trang web). Sinh viên lưu đúng hình đó vào điện thoại và đưa ra khi điểm danh; họ không thể nói là mở nhầm mã của người khác, vì hình đã ghi tên và MSSV của chính họ. Mã QR cũng chứa cả họ tên + MSSV, dùng được cả năm học. Bấm <b>Tải hình thẻ</b> ở từng sinh viên để tải hình PNG hoàn chỉnh của sinh viên đó, hoặc <b>Tải tất cả thẻ</b> để tải lần lượt toàn lớp rồi gửi cho từng người. Sau khi bấm <b>Tải / xem thẻ</b>, thẻ hiện ra ngay trong app kèm nút <b>Tải xuống (PNG)</b>; nếu trình duyệt chặn tải file, nhấn giữ vào hình thẻ (điện thoại) hoặc chuột phải → Lưu hình ảnh (máy tính) để lưu.</p>
           <div class="btnrow">
             <button class="btn primary" id="btnShowQr" type="button">Hiện mã QR</button>
             <button class="btn" id="btnDownloadAllQr" type="button">Tải tất cả thẻ (hình PNG)</button>
@@ -1073,6 +1091,21 @@ function reply(obj) {
       </div>
     </div>
 
+    <!-- QR card viewer: shows the generated card with a download link -->
+    <div class="modal-veil" id="qrViewer">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="qrViewerTitle">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h3 id="qrViewerTitle">Thẻ QR</h3>
+        <p class="sub" id="qrViewerSub" style="margin:0 0 10px;"></p>
+        <img class="qr-view-img" id="qrViewerImg" alt="Thẻ điểm danh QR: mã QR với họ tên và MSSV của sinh viên in bên dưới" />
+        <div class="btnrow">
+          <a class="btn primary" id="qrViewerDownload" href="#" download="QR.png">⬇ Tải xuống (PNG)</a>
+          <button class="btn" id="qrViewerClose" type="button">Đóng</button>
+        </div>
+        <p class="sub" style="margin:10px 0 0;">Nếu nút tải xuống không lưu được file (một số trình duyệt và app nhúng chặn tải file), hãy <b>nhấn giữ vào hình thẻ</b> rồi chọn lưu hình (trên điện thoại), hoặc <b>chuột phải → Lưu hình ảnh thành…</b> (trên máy tính).</p>
+      </div>
+    </div>
+
     <div id="toast" role="status"></div>
 
     <script>
@@ -1092,7 +1125,7 @@ function reply(obj) {
       function nextId() { return "c" + (uid++) + Date.now().toString(36); }
 
       var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      var DAY_NAMES_VI = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]; // used in the Set Up screens
+      var DAY_NAMES_VI = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]; // used in the Settings screens
       var DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon..Sun for pickers
 
       function $(id) { return document.getElementById(id); }
@@ -1236,6 +1269,40 @@ function reply(obj) {
           messagingSenderId: $("fbSenderId").value.trim(),
           appId: $("fbAppId").value.trim()
         };
+      }
+      /* The teacher's own Firebase web config for project qr-att-73f4b,
+         from the console snippet they pasted into the chat. A web
+         config identifies the project (it is not a password), so the
+         "Điền sẵn" button can drop all six values into the fields —
+         nothing to retype, nothing to mismatch. */
+      var FB_PREFILL = {
+        apiKey: "AIzaSyAKhFxDYKQkTwxBFMRYruTUL0Y-9ds-F9I",
+        authDomain: "qr-att-73f4b.firebaseapp.com",
+        projectId: "qr-att-73f4b",
+        storageBucket: "qr-att-73f4b.firebasestorage.app",
+        messagingSenderId: "752287916403",
+        appId: "1:752287916403:web:efee0c7d9dbb8fccd86506"
+      };
+      /* Paste-the-whole-snippet: pull each "key: "value"" pair out of
+         whatever the teacher copied from the Firebase console (the
+         import lines and comments around it are ignored). */
+      function applyFbPaste() {
+        var text = $("fbPaste").value;
+        if (!text.trim()) { toast("Hãy dán đoạn firebaseConfig vào ô trước đã.", true); return; }
+        var keys = ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"];
+        var found = {}, n = 0;
+        keys.forEach(function (k) {
+          var m = text.match(new RegExp(k + "\\s*:\\s*[\"']([^\"']+)[\"']"));
+          if (m) { found[k] = m[1]; n++; }
+        });
+        if (!found.apiKey && !found.projectId) {
+          toast("Không đọc được cấu hình trong đoạn đã dán — hãy sao chép nguyên đoạn firebaseConfig (gồm cả hai dấu { }).", true);
+          return;
+        }
+        var cur = readFbInputs();
+        keys.forEach(function (k) { if (found[k]) cur[k] = found[k]; });
+        fillFbInputs(cur);
+        toast("Đã điền " + n + "/6 ô từ đoạn cấu hình — kiểm tra lại rồi bấm “Kết nối Firebase”.");
       }
       function connectFirebase(cfg, silent) {
         if (typeof firebase === "undefined" || !firebase.initializeApp) {
@@ -1431,7 +1498,7 @@ function reply(obj) {
       }
       function enqueueSheetPush(cls, stu, rec) {
         if (!sheetConnected()) {
-          setSheetLine("local", "Saved in app · Google Sheet not connected — set it up in Set Up for instant push on scan");
+          setSheetLine("local", "Saved in app · Google Sheet not connected — set it up in Settings for instant push on scan");
           return;
         }
         /* Snapshot the record: the queue may run after later scans. */
@@ -1576,8 +1643,8 @@ function reply(obj) {
         if (view === "display") startDisplaySync(); else stopDisplaySync();
         window.scrollTo(0, 0);
       }
-      /* The laptop Setup ⇄ Hiển thị switch appears at the top of the
-         home, Setup, class-editor and display screens; the active side
+      /* The laptop Settings ⇄ Live Observation switch appears at the top of the
+         home, Settings, class-editor and display screens; the active side
          follows the current view (the class editor counts as Setup). */
       function syncModeSwitch() {
         Array.prototype.forEach.call(document.querySelectorAll(".ms-btn"), function (b) {
@@ -1647,7 +1714,7 @@ function reply(obj) {
         sel.innerHTML = "";
         if (!state.classes.length) {
           var o = document.createElement("option");
-          o.value = ""; o.textContent = "No classes yet — open Set Up";
+          o.value = ""; o.textContent = "No classes yet — open Settings";
           sel.appendChild(o);
           sel.disabled = true;
           return;
@@ -1677,7 +1744,7 @@ function reply(obj) {
         var body = $("todayBody");
         if (!cls) {
           body.innerHTML = '<p class="class-name">No class set up yet</p>' +
-            '<p class="sub">Open <b>Set Up</b> to create your classes and add students. Classes scheduled for today will appear here automatically.</p>';
+            '<p class="sub">Open <b>Settings</b> to create your classes and add students. Classes scheduled for today will appear here automatically.</p>';
         } else {
           var isToday = classesToday().indexOf(cls) >= 0;
           var daysTxt = cls.days.slice().sort(function (a, b) { return DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b); })
@@ -1766,7 +1833,7 @@ function reply(obj) {
           sel.innerHTML = "";
           if (!state.classes.length) {
             var o0 = document.createElement("option");
-            o0.value = ""; o0.textContent = "No classes yet — open Set Up";
+            o0.value = ""; o0.textContent = "No classes yet — open Settings";
             sel.appendChild(o0); sel.disabled = true;
           } else {
             sel.disabled = false;
@@ -1784,10 +1851,10 @@ function reply(obj) {
         $("displayLiveText").textContent = synced ? "Live · Firebase" : "Local only";
         $("displaySyncNote").textContent = synced
           ? "Synced in real time through Firebase — scans recorded on the teacher's phone appear here automatically."
-          : "Firebase is not connected on this device, so this screen only follows scans recorded on this device. To sync the teacher's phone with this screen, connect the same Firebase project on both devices (Set Up → Firebase).";
+          : "Firebase is not connected on this device, so this screen only follows scans recorded on this device. To sync the teacher's phone with this screen, connect the same Firebase project on both devices (Settings → Firebase).";
         if (!cls) {
           $("displayClassName").textContent = "No class set up yet";
-          $("displaySubject").textContent = "Open Set Up to create a class first.";
+          $("displaySubject").textContent = "Open Settings to create a class first.";
           $("displayMeta").textContent = "—";
           $("displayCount").textContent = "0 / 0";
           $("displayCountNote").textContent = "scanned";
@@ -2021,7 +2088,7 @@ function reply(obj) {
 
       /* ---------- Push to Google Sheet ----------
          The teacher's own spreadsheet + a small Apps Script inside it
-         (code and setup steps live in Set Up → Google Sheet). The app
+         (code and setup steps live in Settings → Google Sheet). The app
          POSTs the session; the script writes it as one new column in
          the tab named after the class, next to the previous column. */
       var LS_SHEET = "qr-attendance:sheet-config";
@@ -2063,7 +2130,7 @@ function reply(obj) {
         if (!cls) { toast("Choose a class first.", true); return; }
         if (pushBusy) return;
         if (!sheetCfg.sheetUrl || !sheetCfg.webAppUrl) {
-          sheetFallback(cls, "Google Sheet is not set up yet — add both links in Set Up → Google Sheet.");
+          sheetFallback(cls, "Google Sheet is not set up yet — add both links in Settings → Google Sheet.");
           return;
         }
         var key = sessionKey(cls);
@@ -2153,8 +2220,8 @@ function reply(obj) {
         var cls = selectedClass();
         if (!cls) {
           /* No silent dead end: say exactly what is missing and go
-             straight to Set Up so the teacher can create the class. */
-          toast("No class yet — create a class in Set Up first, then scanning will open.", true);
+             straight to Settings so the teacher can create the class. */
+          toast("No class yet — create a class in Settings first, then scanning will open.", true);
           renderSetup();
           show("setup");
           return;
@@ -2175,7 +2242,7 @@ function reply(obj) {
           (state.mode === "tardiness" ? " · late levels are worked out from the scan time" : " · students recorded Late stay Late");
         $("scanSheetNote").textContent = (sheetCfg.sheetUrl && sheetCfg.webAppUrl)
           ? "Google Sheet connected: every scan is saved instantly and queued to push to the Sheet in scan order, in the background — keep scanning, no need to tap Push."
-          : "Google Sheet not connected: attendance is still saved instantly in the app; set up Apps Script in Set Up to push each scan to the Sheet right away.";
+          : "Google Sheet not connected: attendance is still saved instantly in the app; set up Apps Script in Settings to push each scan to the Sheet right away.";
         $("camMsg").textContent = "";
         show("scan");
         renderScanProgress();
@@ -2247,7 +2314,7 @@ function reply(obj) {
         $("scanEmpty").style.display = scanLog.length ? "none" : "block";
       }
 
-      /* ---------- Set Up ---------- */
+      /* ---------- Settings ---------- */
       function dayPicker(el, selected, onChange) {
         el.innerHTML = "";
         DAY_ORDER.forEach(function (d) {
@@ -2434,8 +2501,8 @@ function reply(obj) {
           var tr = document.createElement("tr");
           tr.innerHTML = '<td><div class="cardimg"><div class="qrbox"></div>' +
             '<b>' + esc(s.name) + '</b><span>' + esc(s.mssv) + '</span><small>' + esc(c.name) + '</small></div></td>' +
-            '<td><button type="button" class="btn" data-dlcard="' + esc(s.mssv) + '">Tải hình thẻ (PNG)</button>' +
-            '<div class="sub" style="margin-top:6px; max-width:200px;">Một hình duy nhất: mã QR + họ tên + MSSV in trong hình.</div></td>';
+            '<td><button type="button" class="btn primary" data-dlcard="' + esc(s.mssv) + '">Tải / xem thẻ (PNG)</button>' +
+            '<div class="sub" style="margin-top:6px; max-width:220px;">Bấm để tạo thẻ: thẻ hiện ra ngay trong app kèm nút tải xuống. Một hình duy nhất: mã QR + họ tên + MSSV in trong hình.</div></td>';
           body.appendChild(tr);
           var box = tr.querySelector(".qrbox");
           if (typeof QRCode !== "undefined") {
@@ -2457,25 +2524,40 @@ function reply(obj) {
          full name and ID printed underneath, baked into the image pixels
          themselves — not HTML text around it. This is the file the
          student saves and shows; the name in the image cannot be
-         separated from the code. */
+         separated from the code.
+         The QRCode.js widget draws its <img> asynchronously — the old
+         code waited a fixed 80 ms and then drew whatever it found, so on
+         a slower phone the draw raced the render and the card came out
+         without a usable QR image (or failed outright): the teacher saw
+         "created the QR but can't download it". Now the card is drawn
+         only once the QR image has actually loaded, with a canvas
+         fallback and a timeout, so every tap ends in a real card or a
+         clear error message — never a silent nothing. */
       function buildQrCardImage(cls, s, done) {
         if (typeof QRCode === "undefined") { toast("Không tải được thư viện tạo mã QR. Kiểm tra kết nối mạng rồi thử lại.", true); done(null); return; }
         var holder = document.createElement("div");
-        holder.style.cssText = "position:fixed; left:-9999px; top:0; background:#fff; padding:0;";
+        holder.style.cssText = "position:fixed; left:-9999px; top:0; width:480px; height:480px; background:#fff; padding:0;";
         document.body.appendChild(holder);
-        new QRCode(holder, { text: qrPayload(s), width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
-        setTimeout(function () {
+        try {
+          new QRCode(holder, { text: qrPayload(s), width: 480, height: 480, correctLevel: QRCode.CorrectLevel.M });
+        } catch (e) {
+          try { document.body.removeChild(holder); } catch (err) {}
+          done(null);
+          return;
+        }
+        var finished = false;
+        function cleanup() { try { document.body.removeChild(holder); } catch (e) {} }
+        function draw(qrCanvas, qrImg) {
+          if (finished) return; finished = true;
           try {
-            var srcCanvas = holder.querySelector("canvas");
-            var srcImg = holder.querySelector("img");
             var W = 640, H = 860;
             var cv = document.createElement("canvas");
             cv.width = W; cv.height = H;
             var ctx = cv.getContext("2d");
             ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
             ctx.strokeStyle = "#1c1c1e"; ctx.lineWidth = 6; ctx.strokeRect(10, 10, W - 20, H - 20);
-            if (srcCanvas) ctx.drawImage(srcCanvas, 80, 36, 480, 480);
-            else if (srcImg) ctx.drawImage(srcImg, 80, 36, 480, 480);
+            if (qrCanvas) ctx.drawImage(qrCanvas, 80, 36, 480, 480);
+            else if (qrImg) ctx.drawImage(qrImg, 80, 36, 480, 480);
             ctx.fillStyle = "#111111"; ctx.textAlign = "center";
             /* Name — wrapped to at most two lines, shrunk to fit */
             var size = 44;
@@ -2495,13 +2577,38 @@ function reply(obj) {
             ctx.fillText(cls.name + (cls.subject ? " · " + cls.subject : ""), W / 2, y + 62);
             ctx.fillStyle = "#8e8e93"; ctx.font = "400 21px sans-serif";
             ctx.fillText("Thẻ điểm danh QR — chỉ dùng cho sinh viên ghi tên ở trên", W / 2, H - 34);
-            document.body.removeChild(holder);
+            cleanup();
             done(cv.toDataURL("image/png"));
           } catch (e) {
-            try { document.body.removeChild(holder); } catch (err) {}
+            cleanup();
             done(null);
           }
-        }, 80);
+        }
+        function tryDraw() {
+          if (finished) return true;
+          var cnv = holder.querySelector("canvas");
+          if (cnv) { draw(cnv, null); return true; }
+          var img = holder.querySelector("img");
+          if (img && img.src && img.complete && img.naturalWidth > 0) { draw(null, img); return true; }
+          return false;
+        }
+        if (!tryDraw()) {
+          var imgEl = holder.querySelector("img");
+          if (imgEl) {
+            imgEl.addEventListener("load", tryDraw);
+            imgEl.addEventListener("error", function () {
+              if (finished) return; finished = true; cleanup(); done(null);
+            });
+          }
+          var tries = 0;
+          var iv = setInterval(function () {
+            tries++;
+            if (tryDraw() || tries > 60) {
+              clearInterval(iv);
+              if (!finished) { finished = true; cleanup(); done(null); }
+            }
+          }, 50);
+        }
       }
       function triggerDownload(href, filename) {
         var a = document.createElement("a");
@@ -2512,29 +2619,51 @@ function reply(obj) {
       function cardFileName(s) {
         return "QR-" + s.mssv + "-" + s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") + ".png";
       }
+      /* In-app card viewer: the generated card, shown full-size with a
+         real download link. Some browsers and in-app webviews swallow a
+         scripted download click without saving anything and without any
+         error — the viewer guarantees the teacher can always get the
+         file: tap the download button, or press-and-hold the image. */
+      function openQrViewer(cls, s, url) {
+        $("qrViewerImg").src = url;
+        $("qrViewerTitle").textContent = s.name;
+        $("qrViewerSub").textContent = s.mssv + " · " + cls.name + (cls.subject ? " · " + cls.subject : "");
+        var dl = $("qrViewerDownload");
+        dl.href = url; dl.setAttribute("download", cardFileName(s));
+        $("qrViewer").classList.add("open");
+      }
+      function closeQrViewer() { $("qrViewer").classList.remove("open"); }
       function downloadQrCard(cls, s, btn) {
         var old = btn ? btn.textContent : "";
         if (btn) { btn.disabled = true; btn.textContent = "Đang tạo hình…"; }
         buildQrCardImage(cls, s, function (url) {
           if (btn) { btn.disabled = false; btn.textContent = old; }
-          if (!url) { toast("Tạo hình thẻ thất bại — thử lại sau khi kiểm tra mạng.", true); return; }
-          triggerDownload(url, cardFileName(s));
-          toast("Đã tải hình thẻ của " + s.name + " — hình có sẵn họ tên + MSSV bên dưới mã QR.");
+          if (!url) { toast("Tạo hình thẻ thất bại — kiểm tra kết nối mạng rồi thử lại.", true); return; }
+          openQrViewer(cls, s, url);
+          toast("Đã tạo thẻ của " + s.name + " — bấm “Tải xuống (PNG)” trong khung vừa mở để lưu hình về máy.");
         });
       }
-      function downloadAllQrCards() {
+      function downloadAllQrCards(btn) {
         var c = editingClass();
         if (!c) return;
         if (!c.students.length) { toast("Hãy thêm sinh viên trước.", true); return; }
         var list = sortedStudents(c);
-        var i = 0;
-        toast("Đang tải " + list.length + " hình thẻ — mỗi hình gồm mã QR + họ tên + MSSV…");
+        var old = btn ? btn.textContent : "";
+        if (btn) btn.disabled = true;
+        var i = 0, okCount = 0;
+        toast("Đang tạo và tải " + list.length + " hình thẻ — mỗi hình gồm mã QR + họ tên + MSSV…");
         (function next() {
-          if (i >= list.length) { toast("Đã tải xong " + list.length + " hình thẻ. Gửi mỗi sinh viên đúng hình mang tên họ."); return; }
+          if (i >= list.length) {
+            if (btn) { btn.disabled = false; btn.textContent = old; }
+            if (okCount) toast("Đã tải " + okCount + "/" + list.length + " hình thẻ. Nếu trình duyệt chặn tải nhiều file cùng lúc, hãy bấm “Tải / xem thẻ” ở từng sinh viên để lấy từng hình.");
+            else toast("Không tạo được hình thẻ nào — kiểm tra kết nối mạng rồi thử lại.", true);
+            return;
+          }
           var s = list[i++];
+          if (btn) btn.textContent = "Đang tải " + i + "/" + list.length + "…";
           buildQrCardImage(c, s, function (url) {
-            if (url) triggerDownload(url, cardFileName(s));
-            setTimeout(next, 450);
+            if (url) { okCount++; triggerDownload(url, cardFileName(s)); }
+            setTimeout(next, 500);
           });
         })();
       }
@@ -2542,11 +2671,11 @@ function reply(obj) {
         var c = editingClass();
         if (!c) return;
         if (!c.students.length) { toast("Hãy thêm sinh viên trước.", true); return; }
-        var lines = ["Họ tên\tMSSV\tLink tải QR"];
+        var lines = ["Họ tên\tMSSV\tLink mở thẻ QR"];
         sortedStudents(c).forEach(function (s) {
           lines.push(s.name + "\t" + s.mssv + "\t" + qrUrl(s));
         });
-        copyText(lines.join("\n"), "Đã sao chép danh sách (link này chỉ là mã QR trần). Để chống gian lận, hãy gửi sinh viên hình thẻ PNG có họ tên + MSSV bằng nút “Tải hình thẻ”.");
+        copyText(lines.join("\n"), "Đã sao chép danh sách. Link này mở ra chỉ là mã QR trần (không có họ tên in trong hình) — để chống gian lận, hãy gửi sinh viên hình thẻ PNG có họ tên + MSSV bằng nút “Tải / xem thẻ”.");
       }
 
       /* ---------- Clear data ---------- */
@@ -2585,6 +2714,11 @@ function reply(obj) {
           connectFirebase(cfg, false);
         });
         $("btnFbDisconnect").addEventListener("click", disconnectFirebase);
+        $("btnFbPaste").addEventListener("click", applyFbPaste);
+        $("btnFbPrefill").addEventListener("click", function () {
+          fillFbInputs(FB_PREFILL);
+          toast("Đã điền sẵn cấu hình của project qr-att-73f4b — bấm “Kết nối Firebase” để kết nối.");
+        });
 
         $("classSelect").addEventListener("change", function () {
           state.selectedClassId = this.value || null;
@@ -2631,7 +2765,6 @@ function reply(obj) {
         $("btnDownloadGas").addEventListener("click", downloadGas);
         $("btnDownloadGasTop").addEventListener("click", downloadGas);
         $("btnGotoGas").addEventListener("click", gotoGas);
-        $("btnHomeGas").addEventListener("click", gotoGas);
         $("btnGotoFirebase").addEventListener("click", gotoFirebase);
         $("btnCsv").addEventListener("click", exportCSV);
 
@@ -2643,7 +2776,7 @@ function reply(obj) {
           var wasFinished = cls ? sessionFinished(cls) : true;
           finishSession(cls);
           stopScanner(); renderHome(); show("home");
-          if (cls && !wasFinished) toast("Session finished for " + cls.name + " — students not scanned are now marked off on the projector display.");
+          if (cls && !wasFinished) toast("Session finished for " + cls.name + " — students not scanned are now marked off on the Live Observation screen.");
         });
         $("displayFinishBtn").addEventListener("click", function () {
           var cls = selectedClass();
@@ -2729,8 +2862,10 @@ function reply(obj) {
         $("btnImport").addEventListener("click", importStudents);
         $("btnAddStudent").addEventListener("click", addOneStudent);
         $("btnShowQr").addEventListener("click", showQrCodes);
-        $("btnDownloadAllQr").addEventListener("click", downloadAllQrCards);
+        $("btnDownloadAllQr").addEventListener("click", function () { downloadAllQrCards(this); });
         $("btnCopyQr").addEventListener("click", copyQrList);
+        $("qrViewerClose").addEventListener("click", closeQrViewer);
+        $("qrViewer").addEventListener("click", function (e) { if (e.target === this) closeQrViewer(); });
       });
     </script>
   </body>
