@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Join class — Điểm danh QR</title>
+    <script>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("qr-attendance:theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      body { padding-bottom: 96px; }
+      .hello { display: flex; align-items: center; gap: 12px; }
+      .hello .nm { font-weight: 700; font-size: 18px; line-height: 1.25; }
+      .hello .cl { font-size: 13px; color: var(--muted); }
+      .pts-pill { margin-left: auto; text-align: right; }
+      .pts-pill b { display: block; font-size: 28px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .pts-pill span { font-size: 12px; color: var(--muted); }
+      .stage { text-align: center; padding: 26px 18px; }
+      .stage .big { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; margin: 6px 0 8px; }
+      .stage .icon { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; background: var(--surface-2); color: var(--muted); }
+      .stage .icon.ok { background: var(--green-bg); color: var(--green); }
+      .stage .icon.bad { background: var(--red-bg); color: var(--red); }
+      .stage .icon.warn { background: var(--amber-bg); color: var(--amber); }
+      .qtext { font-size: 20px; font-weight: 600; line-height: 1.3; margin: 0 0 14px; text-align: left; overflow-wrap: anywhere; }
+      .opts { display: grid; gap: 10px; }
+      .opt {
+        display: flex; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 10px 16px;
+        border: 1.5px solid var(--line); background: var(--surface-solid); border-radius: 18px; text-align: left; font-size: 18px; font-weight: 600;
+      }
+      .opt:active { background: var(--surface-2); }
+      .opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+      .opt.sel .opt-letter { background: var(--grad-accent); color: var(--on-accent); }
+      .opt:disabled { opacity: 1; }
+      .timer { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 0 0 16px; }
+      .timer i { display: block; height: 100%; background: var(--grad-accent); transform-origin: left; }
+      .tleft { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+      .handbar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+        background: var(--bg); border-top: 1px solid var(--line);
+      }
+      .handbar .inner { max-width: 640px; margin: 0 auto; }
+      .handbar .btn { min-height: 56px; font-size: 17px; }
+      .banner { background: var(--grad-accent); color: var(--on-accent); border-radius: 16px; padding: 14px 16px; font-weight: 700; margin-top: 12px; text-align: center; }
+      .err { color: var(--red); font-size: 14px; font-weight: 600; margin-top: 10px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="shared.js"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="topbar" id="topbar"><h1 id="title">Join class</h1><span class="live-dot" id="conn"><i></i><span id="connText">Connecting…</span></span></div>
+      <div id="main"></div>
+    </div>
+    <div class="handbar hidden" id="handbar"><div class="inner" id="handInner"></div></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        var $ = QR.$, esc = QR.esc, fmt = QR.fmt;
+        var sid = new URLSearchParams(location.search).get("s");
+        var S = { db: null, live: null, me: null, myAnswer: null, answerFor: null, pts: 0, hands: [], handsOpen: true,
+                  qSeen: null, qT0: 0, calledSeen: 0, calledShow: null, joinedAt: Date.now(), connOk: false, busy: false };
+
+        function setConn(state, text) { var el = $("conn"); el.className = "live-dot" + (state === "ok" ? " on" : state === "err" ? " err" : ""); $("connText").textContent = text; }
+        function lsKey() { return "qra:mssv:" + (S.live ? S.live.classId : sid); }
+
+        QR.mountThemeButton($("topbar"));
+        if (!sid) { $("main").innerHTML = "<div class='card'><h3>Scan the class QR code</h3><p class='sub'>Open the camera on your phone and scan the code your teacher is showing.</p></div>"; setConn("err", "No class"); return; }
+        try { S.db = QR.initFirestore(QR.FB_PREFILL); } catch (e) { $("main").innerHTML = "<div class='card'><h3>Could not load</h3><p class='sub'>Check your connection and reload.</p></div>"; setConn("err", "Offline"); return; }
+        var FV = firebase.firestore.FieldValue;
+        var liveRef = S.db.collection("live").doc(sid);
+
+        liveRef.onSnapshot(function (doc) {
+          if (!doc.metadata.fromCache && !S.connOk) { S.connOk = true; setConn("ok", "Connected"); }
+          if (!doc.exists) { S.live = null; $("main").innerHTML = "<div class='card'><h3>Class not started yet</h3><p class='sub'>Ask your teacher to open the participation session, then reload.</p></div>"; return; }
+          S.live = doc.data();
+          if (!S.me) tryAutoJoin();
+          onLive(); render();
+        }, function (e) { setConn("err", "Error"); QR.toast(QR.errText(e), true, 7000); });
+
+        /* ---------- joining ---------- */
+        function rosterFind(m) { m = String(m || "").trim(); var r = (S.live.roster || []); for (var i = 0; i < r.length; i++) if (r[i].m === m) return r[i]; return null; }
+        function tryAutoJoin() {
+          var saved = null; try { saved = localStorage.getItem(lsKey()); } catch (e) {}
+          var r = saved && rosterFind(saved);
+          if (r) join(r, true);
+        }
+        function join(r, silent) {
+          S.me = r; try { localStorage.setItem(lsKey(), r.m); } catch (e) {}
+          $("title").textContent = S.live.className;
+          liveRef.collection("members").doc(r.m).set({ mssv: r.m, name: r.n, t: FV.serverTimestamp() }).catch(function () {});
+          S.db.collection("participation").doc(sid).onSnapshot(function (d) { var sc = d.exists && d.data().scores || {}; S.pts = +((sc[r.m] || {}).pts) || 0; if (S.me) renderHead(); });
+          liveRef.collection("hands").orderBy("t").onSnapshot(function (snap) { S.hands = []; snap.forEach(function (d) { S.hands.push(d.id); }); renderHand(); });
+          render();
+        }
+
+        /* ---------- reacting to the teacher's state ---------- */
+        function onLive() {
+          var q = S.live.question;
+          if (q && q.id !== S.qSeen) { S.qSeen = q.id; S.qT0 = performance.now(); S.answerFor = q.id; S.myAnswer = savedAnswer(q.id); }
+          if (!q) { S.qSeen = null; S.myAnswer = null; }
+          var c = S.live.called;
+          if (S.me && c && c.m === S.me.m && c.seq > S.joinedAt - 1000 && c.seq !== S.calledSeen) {
+            S.calledSeen = c.seq; S.calledShow = c; setTimeout(function () { S.calledShow = null; render(); }, 9000);
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+          }
+          S.handsOpen = S.live.handsOpen !== false;
+        }
+        /* The answer is remembered on this phone, so a reload keeps it locked
+           without waiting for a network read (which would slow the answer). */
+        function ansKey(qid) { return "qra:ans:" + sid + ":" + qid; }
+        function savedAnswer(qid) { try { return localStorage.getItem(ansKey(qid)) || null; } catch (e) { return null; } }
+
+        /* ---------- rendering ---------- */
+        function render() {
+          var main = $("main");
+          if (!S.live) return;
+          if (!S.me) return renderJoin(main);
+          renderPlay(main); renderHand();
+        }
+        function renderJoin(main) {
+          var saved = ""; try { saved = localStorage.getItem(lsKey()) || ""; } catch (e) {}
+          main.innerHTML = "<div class='card' style='margin-top:6px'><div class='hello' style='margin-bottom:14px'>" + QR.monoHtml({ id: S.live.classId, name: S.live.className }) +
+            "<div><div class='nm'>" + esc(S.live.className) + "</div><div class='cl'>" + esc(S.live.subject || "") + "</div></div></div>" +
+            "<label class='f' for='mssv' style='margin-top:0'>Student ID (MSSV)</label>" +
+            "<input type='tel' id='mssv' inputmode='numeric' autocomplete='off' placeholder='e.g. 1254030104' value='" + esc(saved) + "'>" +
+            "<div class='err hidden' id='jerr'></div>" +
+            "<div class='row' style='margin-top:14px'><button class='btn primary block' id='jbtn'>Join class</button></div></div>";
+          var inp = $("mssv"), btn = $("jbtn");
+          function go() {
+            var r = rosterFind(inp.value);
+            if (!r) { var e = $("jerr"); e.textContent = "This ID is not in " + S.live.className + ". Check the number and try again."; e.classList.remove("hidden"); return; }
+            join(r, false);
+          }
+          btn.onclick = go; inp.onkeydown = function (ev) { if (ev.key === "Enter") go(); };
+        }
+        function headHtml() {
+          return "<div class='hello'>" + QR.monoHtml({ id: S.live.classId, name: S.live.className }) +
+            "<div style='min-width:0'><div class='nm'>" + esc(S.me.n) + "</div><div class='cl'>" + esc(S.live.className) + " · " + esc(S.me.m) + " · <a href='#' id='notme' style='color:var(--muted)'>not you?</a></div></div>" +
+            "<div class='pts-pill'><b id='myPts'>" + fmt(S.pts) + "</b><span>pts today</span></div></div>";
+        }
+        function renderHead() { var el = $("myPts"); if (el) el.textContent = fmt(S.pts); }
+        var timerRaf = null;
+        function renderPlay(main) {
+          var q = S.live.question, body = "";
+          if (S.live.status === "ended") body = stageHtml("✓", "", "Session ended", "You earned " + fmt(S.pts) + " points today. See you next class!");
+          else if (!q) body = stageHtml("…", "", "Waiting for the next question", "Keep this page open. It updates by itself.");
+          else if (q.status === "open") body = openHtml(q);
+          else if (q.status === "closed") body = stageHtml("…", "warn", "Time's up", "Checking answers…");
+          else body = resultHtml(q);
+          main.innerHTML = "<div class='card' style='margin-top:6px'>" + headHtml() + "</div>" +
+            (S.calledShow ? "<div class='banner'>" + esc("You were called! +" + fmt(S.calledShow.pts)) + "</div>" : "") +
+            "<div class='card stage'>" + body + "</div>";
+          var nm = $("notme"); if (nm) nm.onclick = function (ev) { ev.preventDefault(); try { localStorage.removeItem(lsKey()); } catch (e) {} S.me = null; render(); };
+          startTimer(q);
+        }
+        function stageHtml(icon, cls, big, sub) {
+          return "<div class='icon " + cls + "'>" + icon + "</div><div class='big'>" + esc(big) + "</div><p class='sub'>" + esc(sub) + "</p>";
+        }
+        var LETTERS = ["A", "B", "C", "D", "E"];
+        function openHtml(q) {
+          var opts = LETTERS.slice(0, q.n).map(function (L) {
+            return "<button class='opt" + (S.myAnswer === L ? " sel" : "") + "' data-c='" + L + "'" + (S.myAnswer ? " disabled" : "") + "><span class='opt-letter'>" + L + "</span>" + (S.myAnswer === L ? "Your answer" : "") + "</button>";
+          }).join("");
+          return (q.text ? "<p class='qtext'>" + esc(q.text) + "</p>" : "<p class='qtext'>Choose your answer</p>") +
+            "<div class='tleft'><span id='tl'></span><span>" + (S.myAnswer ? "Answer sent ✓" : "Worth " + fmt(q.points) + " pt") + "</span></div><div class='timer'><i id='tbar'></i></div>" +
+            "<div class='opts'>" + opts + "</div>";
+        }
+        function resultHtml(q) {
+          var r = S.live.results, a = r && r.qid === q.id ? (r.awards || {})[S.me.m] : null;
+          if (!r || r.qid !== q.id) return stageHtml("…", "warn", "Time's up", "Checking answers…");
+          var corr = r.correct === "*" ? "Every answer scores" : "Correct answer: " + r.correct;
+          if (!a) return stageHtml("–", "", "No answer sent", corr);
+          if (a.ok) {
+            var sub = a.rank ? "Fastest #" + a.rank + " (" + (a.ms / 1000).toFixed(1) + " s)" : "Answered in " + (a.ms / 1000).toFixed(1) + " s";
+            return stageHtml("✓", "ok", "Correct! +" + fmt(a.pts), sub);
+          }
+          return stageHtml("✕", "bad", "Not this time", corr);
+        }
+        function startTimer(q) {
+          cancelAnimationFrame(timerRaf);
+          if (!q || q.status !== "open") return;
+          (function loop() {
+            var bar = $("tbar"), tl = $("tl"); if (!bar) return;
+            var left = Math.max(0, q.durationSec - (performance.now() - S.qT0) / 1000);
+            bar.style.transform = "scaleX(" + (left / q.durationSec) + ")"; tl.textContent = Math.ceil(left) + " s left";
+            if (left > 0) timerRaf = requestAnimationFrame(loop);
+          })();
+        }
+        function renderHand() {
+          var hb = $("handbar"), hi = $("handInner");
+          if (!S.me || !S.live || S.live.status === "ended") { hb.classList.add("hidden"); return; }
+          hb.classList.remove("hidden");
+          var pos = S.hands.indexOf(S.me.m);
+          if (pos >= 0) hi.innerHTML = "<button class='btn block' id='hbtn'>Hand raised · you are #" + (pos + 1) + " — tap to lower</button>";
+          else if (S.handsOpen) hi.innerHTML = "<button class='btn primary block' id='hbtn'>Raise hand</button>";
+          else hi.innerHTML = "<button class='btn block' disabled>Hand-raising is closed</button>";
+          var b = $("hbtn"); if (b) b.onclick = toggleHand;
+        }
+        function toggleHand() {
+          var ref = liveRef.collection("hands").doc(S.me.m);
+          if (S.hands.indexOf(S.me.m) >= 0) ref.delete().catch(function () {});
+          else ref.set({ mssv: S.me.m, name: S.me.n, t: FV.serverTimestamp() }).catch(function (e) { QR.toast(QR.errText(e), true); });
+          if (navigator.vibrate) navigator.vibrate(15);
+        }
+
+        /* ---------- answering ---------- */
+        document.addEventListener("click", function (ev) {
+          var b = ev.target.closest(".opt[data-c]"); if (!b || S.busy || S.myAnswer) return;
+          var q = S.live && S.live.question; if (!q || q.status !== "open") return;
+          var choice = b.getAttribute("data-c"), ref = liveRef.collection("answers").doc(q.id + "_" + S.me.m);
+          S.busy = true; S.myAnswer = choice; render();
+          if (navigator.vibrate) navigator.vibrate(20);
+          try { localStorage.setItem(ansKey(q.id), choice); } catch (e) {}
+          ref.set({ qid: q.id, mssv: S.me.m, choice: choice, t: FV.serverTimestamp() })
+            .catch(function (e) { S.myAnswer = null; try { localStorage.removeItem(ansKey(q.id)); } catch (er) {} QR.toast("Could not send: " + QR.errText(e), true, 6000); })
+            .then(function () { S.busy = false; render(); });
+        });
+      })();
+    </script>
+  </body>
+</html>

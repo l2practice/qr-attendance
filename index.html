@@ -675,6 +675,7 @@
           </div>
         </div>
 
+        <a class="btn block" id="btnLive" href="live.html" style="margin-top:12px;">Participation — questions, hands, scores</a>
         <div class="btnrow">
           <button class="btn block" id="btnDisplay" type="button" style="padding:14px;">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 16v5"/></svg>
@@ -1837,9 +1838,10 @@ function reply(obj) {
       /* Each class gets a stable pale tint (hue) and a monogram taken from
          the end of its name (DH15NNA-C -> C). Neighbouring hues are far apart. */
       var CLASS_HUES = [205, 28, 150, 340, 50, 185, 10, 100];
-      function classHue(c) {
-        var i = state.classes.indexOf(c);
-        return CLASS_HUES[(i < 0 ? 0 : i) % CLASS_HUES.length];
+      function classHue(c) { /* from the class id, so every device and page shows the same colour */
+        var h = 0, id = String(c.id || "");
+        for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+        return CLASS_HUES[h % CLASS_HUES.length];
       }
       function classMonogram(c) {
         var n = String(c.name || "").trim();
@@ -1877,6 +1879,7 @@ function reply(obj) {
            (or a class with no students) openScan() explains what is
            missing and takes the teacher straight to where to fix it. */
         $("btnScan").disabled = false;
+        $("btnLive").setAttribute("href", "live.html" + (cls ? "?c=" + encodeURIComponent(cls.id) : ""));
         $("scanHint").style.display = cls ? "none" : "block";
       }
       function renderMode() {

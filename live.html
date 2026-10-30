@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Chuyên cần — Điểm danh QR</title>
+    <script>
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("qr-attendance:theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+      .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      @media (min-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } }
+      .stage { margin-top: 0; min-height: 380px; }
+      .stage-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .stage-head .t { font-weight: 700; font-size: 18px; letter-spacing: -0.012em; }
+      .q-big { font-size: clamp(26px, 3.2vw, 40px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin: 6px 0 18px; overflow-wrap: anywhere; }
+      .opts-big { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+      .opt-tile { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 18px; padding: 20px 8px; text-align: center; font-size: clamp(34px, 4vw, 52px); font-weight: 700; }
+      .count-big { font-size: clamp(64px, 9vw, 120px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+      .count-big.low { color: var(--red); }
+      .meter { height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 14px 0 6px; }
+      .meter i { display: block; height: 100%; background: var(--grad-green); transition: width .4s; }
+      .bar-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 52px; gap: 10px; align-items: center; margin: 8px 0; }
+      .bar { height: 30px; border-radius: 10px; background: var(--surface-2); overflow: hidden; }
+      .bar i { display: block; height: 100%; background: var(--surface-3); transition: width .5s; }
+      .bar.correct i { background: var(--grad-green); }
+      .bar-row .n { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+      .li:last-child { border-bottom: 0; }
+      .li .who { flex: 1 1 auto; min-width: 0; }
+      .li .who b { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .li .who span { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .li .pts { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+      .rank { width: 26px; text-align: center; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .mini { border: 1px solid var(--line); background: var(--surface-solid); border-radius: 10px; width: 36px; height: 36px; font-size: 18px; font-weight: 700; line-height: 1; }
+      .mini:active { background: var(--surface-2); }
+      .join-qr { display: flex; gap: 14px; align-items: center; }
+      .join-qr .qrbox { background: #fff; padding: 8px; border-radius: 12px; flex: 0 0 auto; line-height: 0; }
+      .join-qr .url { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+      .board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 28px; }
+      .board-grid .li { padding: 12px 0; font-size: 20px; }
+      .board-grid .li .who b { font-size: 20px; }
+      .big-note { font-size: clamp(18px, 2vw, 24px); font-weight: 600; margin: 4px 0 14px; }
+      .cls-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 12px 16px 12px 12px; margin-bottom: 10px; }
+      .cls-card b { display: block; font-size: 17px; font-weight: 600; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="shared.js"></script>
+  </head>
+  <body>
+    <div class="wrap wide">
+      <div class="topbar" id="topbar">
+        <a class="back" href="index.html">← Home</a>
+        <h1 id="title">Chuyên cần · Participation</h1>
+        <span class="live-dot" id="conn"><i></i><span id="connText">Connecting…</span></span>
+      </div>
+
+      <div id="msg" class="card hidden"></div>
+      <div id="picker" class="hidden"></div>
+
+      <div id="room" class="layout hidden">
+        <div>
+          <div class="card stage" id="stage"></div>
+        </div>
+        <div id="side">
+          <div class="card" id="joinCard" style="margin-top:0;"></div>
+          <div class="card" id="handCard"></div>
+          <div class="card" id="scoreCard"></div>
+          <div class="card" id="actCard"></div>
+        </div>
+      </div>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      (function () {
+        var $ = QR.$, esc = QR.esc, fmt = QR.fmt;
+        var LS_CFG = "qr-attendance:firebase-config", LS_DATA = "qr-attendance:data:v1";
+        var LETTERS = ["A", "B", "C", "D", "E"];
+        var FV = null;
+
+        var S = {
+          db: null, cls: null, sid: null, live: null, scores: {}, hands: [], membersN: 0, answersN: 0,
+          names: {}, view: "main", showAll: false, closing: false, connOk: false,
+          cfg: { text: "", n: 4, correct: null, time: 30, points: 1, bonus: 0.5, bonusTop: 3, handPts: 1 },
+          unsubAnswers: null, answersFor: null
+        };
+        try { var saved = JSON.parse(localStorage.getItem("qr-attendance:live-cfg") || "null"); if (saved) for (var k in saved) if (k in S.cfg && k !== "text" && k !== "correct") S.cfg[k] = saved[k]; } catch (e) {}
+        function saveCfg() { try { localStorage.setItem("qr-attendance:live-cfg", JSON.stringify({ n: S.cfg.n, time: S.cfg.time, points: S.cfg.points, bonus: S.cfg.bonus, bonusTop: S.cfg.bonusTop, handPts: S.cfg.handPts })); } catch (e) {} }
+
+        function setConn(state, text) {
+          var el = $("conn"); el.className = "live-dot" + (state === "ok" ? " on" : state === "err" ? " err" : "");
+          $("connText").textContent = text;
+        }
+        function showMsg(html) { var m = $("msg"); m.innerHTML = html; m.classList.remove("hidden"); }
+        function fail(e, what) { QR.toast((what ? what + ": " : "") + QR.errText(e), true, 7000); }
+
+        /* ---------------- boot ---------------- */
+        function loadLocalClasses() {
+          try { var d = JSON.parse(localStorage.getItem(LS_DATA) || "null"); return (d && d.classes) || []; } catch (e) { return []; }
+        }
+        function boot() {
+          QR.mountThemeButton($("topbar"));
+          var cfg = null;
+          try { cfg = JSON.parse(localStorage.getItem(LS_CFG) || "null"); } catch (e) {}
+          try { S.db = QR.initFirestore(cfg && cfg.apiKey ? cfg : QR.FB_PREFILL); FV = firebase.firestore.FieldValue; }
+          catch (e) { showMsg("<h3>Firebase did not load</h3><p class='sub'>Check the network, then reload this page.</p>"); setConn("err", "No Firebase"); return; }
+          var classes = loadLocalClasses();
+          var want = new URLSearchParams(location.search).get("c");
+          function go(list) {
+            var cls = null;
+            if (want) cls = list.filter(function (c) { return c.id === want; })[0];
+            if (!cls && list.length === 1) cls = list[0];
+            if (cls) return openRoom(cls);
+            if (!list.length) { showMsg("<h3>No classes yet</h3><p class='sub'>Create a class in the main app first (Settings), then come back.</p>"); return; }
+            var p = $("picker"); p.classList.remove("hidden");
+            p.innerHTML = "<h3 style='margin:6px 0 12px;'>Choose a class</h3>" + list.map(function (c) {
+              return "<button class='cls-card' data-c='" + esc(c.id) + "'>" + QR.monoHtml(c) + "<span><b>" + esc(c.name) + "</b><span class='sub'>" + esc(c.subject) + " · " + c.students.length + " students</span></span></button>";
+            }).join("");
+            p.onclick = function (ev) { var b = ev.target.closest("[data-c]"); if (!b) return; var c = list.filter(function (x) { return x.id === b.getAttribute("data-c"); })[0]; p.classList.add("hidden"); openRoom(c); };
+          }
+          if (classes.length) go(classes);
+          else S.db.collection("classes").get().then(function (snap) {
+            var list = []; snap.forEach(function (d) { var x = d.data(); list.push({ id: d.id, name: x.name, subject: x.subject, students: x.students || [] }); });
+            go(list);
+          }).catch(function (e) { setConn("err", "Firestore error"); showMsg("<h3>Cannot read classes</h3><p class='sub'>" + esc(QR.errText(e)) + "</p>"); });
+        }
+
+        /* ---------------- session ---------------- */
+        function openRoom(cls) {
+          S.cls = cls; S.sid = cls.id + "_" + QR.todayISO();
+          S.names = {}; cls.students.forEach(function (s) { S.names[s.mssv] = s.name; });
+          $("title").innerHTML = esc(cls.name) + " <span style='color:var(--muted);font-weight:500;'>· Chuyên cần</span>";
+          $("room").classList.remove("hidden");
+          var ref = S.db.collection("live").doc(S.sid);
+          ref.get().then(function (snap) {
+            var base = {
+              classId: cls.id, date: QR.todayISO(), className: cls.name, subject: cls.subject,
+              roster: cls.students.map(function (s) { return { m: s.mssv, n: s.name }; }), status: "active"
+            };
+            if (!snap.exists) { base.handsOpen = true; base.question = null; base.results = null; base.called = null; }
+            return ref.set(base, { merge: true });
+          }).then(function () {
+            S.db.collection("participation").doc(S.sid).set({ classId: cls.id, date: QR.todayISO() }, { merge: true });
+            subscribe(ref);
+            setInterval(tick, 250);
+          }).catch(function (e) { setConn("err", "Firestore error"); fail(e, "Cannot start the session"); });
+        }
+        function subscribe(ref) {
+          function onErr(e) { S.connOk = false; setConn("err", "Firestore error"); fail(e); }
+          ref.onSnapshot({ includeMetadataChanges: true }, function (doc) {
+            if (!doc.exists) return;
+            if (!doc.metadata.fromCache && !S.connOk) { S.connOk = true; setConn("ok", "Live"); }
+            S.live = doc.data({ serverTimestamps: "estimate" });
+            watchAnswers(); render();
+          }, onErr);
+          S.db.collection("participation").doc(S.sid).onSnapshot(function (doc) {
+            S.scores = (doc.exists && doc.data().scores) || {}; renderSide();
+            if (S.view === "board") renderStage();
+          }, onErr);
+          ref.collection("hands").orderBy("t").onSnapshot(function (snap) {
+            S.hands = []; snap.forEach(function (d) { var x = d.data(); S.hands.push({ m: x.mssv, n: x.name, t: x.t ? x.t.toMillis() : Date.now() }); });
+            renderSide();
+          }, onErr);
+          ref.collection("members").onSnapshot(function (snap) { S.membersN = snap.size; renderSide(); if (phase() === "open") renderStage(); }, onErr);
+        }
+        function watchAnswers() {
+          var q = S.live && S.live.question, qid = q ? q.id : null;
+          if (qid === S.answersFor) return;
+          if (S.unsubAnswers) { S.unsubAnswers(); S.unsubAnswers = null; }
+          S.answersFor = qid; S.answersN = 0;
+          if (!qid) return;
+          S.unsubAnswers = S.db.collection("live").doc(S.sid).collection("answers").where("qid", "==", qid).onSnapshot(function (snap) {
+            S.answersN = snap.size; if (phase() === "open") updateOpenLive();
+          });
+        }
+
+        /* ---------------- phases ---------------- */
+        function phase() {
+          if (!S.live) return "load";
+          if (S.live.status === "ended") return "ended";
+          if (S.view === "board") return "board";
+          var q = S.live.question;
+          if (!q) return "idle";
+          return q.status === "open" ? "open" : "done";
+        }
+        var lastPhaseKey = "";
+        function render() { renderStage(); renderSide(); }
+        function renderStage() {
+          var ph = phase(), q = S.live && S.live.question;
+          var key = ph + "|" + (q ? q.id + q.status : "") + "|" + S.cfg.n + "|" + S.cfg.correct + "|" + S.cfg.time + "|" + (S.live && S.live.results ? S.live.results.qid : "");
+          if (ph === "board") key += "|" + Date.now(); // always repaint the board
+          if (key === lastPhaseKey && ph !== "board") return; // nothing visible changed: keep focus and typed text
+          lastPhaseKey = key;
+          var st = $("stage");
+          if (ph === "load") { st.innerHTML = "<p class='sub'>Opening the session…</p>"; return; }
+          if (ph === "ended") { st.innerHTML = "<div class='stage-head'><span class='t'>Session ended</span></div><p class='sub'>Today's scores are saved. Use Export to get the Excel file.</p><div class='row' style='margin-top:14px'><button class='btn' data-act='board'>Show final scores</button><button class='btn primary' data-act='reopen'>Reopen session</button></div>"; return; }
+          if (ph === "idle") return renderIdle(st);
+          if (ph === "open") return renderOpen(st, q);
+          if (ph === "board") return renderBoard(st);
+          return renderDone(st, q);
+        }
+
+        function renderIdle(st) {
+          var c = S.cfg, n = c.n;
+          var optPick = [2, 3, 4, 5].map(function (x) { return "<button data-act='n' data-v='" + x + "' class='" + (c.n === x ? "on" : "") + "'>" + x + "</button>"; }).join("");
+          var corr = LETTERS.slice(0, n).map(function (L) { return "<button data-act='correct' data-v='" + L + "' class='" + (c.correct === L ? "on" : "") + "'>" + L + "</button>"; }).join("") +
+            "<button data-act='correct' data-v='*' class='" + (c.correct === "*" ? "on" : "") + "' title='Everyone who answers scores'>Any</button>";
+          var tpick = [15, 20, 30, 45, 60].map(function (x) { return "<button data-act='time' data-v='" + x + "' class='" + (c.time === x ? "on" : "") + "'>" + x + "s</button>"; }).join("");
+          st.innerHTML =
+            "<div class='stage-head'><span class='t'>Ask a question</span></div>" +
+            "<label class='f' for='qText' style='margin-top:0'>Question <span style='font-weight:400'>(optional — you can ask aloud)</span></label>" +
+            "<input type='text' id='qText' maxlength='200' autocomplete='off' placeholder='e.g. Which tense is used here?' value='" + esc(c.text) + "'>" +
+            "<label class='f'>Answer choices</label><div class='pick'>" + optPick + "</div>" +
+            "<label class='f'>Correct answer <span style='font-weight:400'>(only on this screen — students never see it until you reveal)</span></label><div class='pick'>" + corr + "</div>" +
+            "<label class='f'>Time</label><div class='pick'>" + tpick + "</div>" +
+            "<div class='row' style='margin-top:16px'>" +
+              "<label class='f' style='margin:0'>Correct = <input type='number' id='cPts' step='0.5' min='0' value='" + c.points + "' style='width:84px;display:inline-block'> pt</label>" +
+              "<label class='f' style='margin:0'>Fastest <input type='number' id='cTop' step='1' min='0' max='10' value='" + c.bonusTop + "' style='width:72px;display:inline-block'> get +<input type='number' id='cBonus' step='0.5' min='0' value='" + c.bonus + "' style='width:84px;display:inline-block'></label>" +
+            "</div>" +
+            "<div class='row' style='margin-top:18px'><button class='btn primary' data-act='start' " + (c.correct ? "" : "disabled") + ">Start question</button><button class='btn' data-act='board'>Show scores</button>" +
+            (c.correct ? "" : "<span class='sub'>Pick the correct answer first</span>") + "</div>";
+          bindIdleInputs();
+        }
+        function bindIdleInputs() {
+          var t = $("qText"); if (t) t.oninput = function () { S.cfg.text = t.value; };
+          [["cPts", "points"], ["cTop", "bonusTop"], ["cBonus", "bonus"]].forEach(function (p) {
+            var el = $(p[0]); if (el) el.oninput = function () { var v = parseFloat(el.value); if (!isNaN(v) && v >= 0) { S.cfg[p[1]] = v; saveCfg(); } };
+          });
+        }
+
+        function renderOpen(st, q) {
+          var tiles = LETTERS.slice(0, q.n).map(function (L) { return "<div class='opt-tile'>" + L + "</div>"; }).join("");
+          st.innerHTML =
+            "<div class='stage-head'><span class='t'>Question open</span><span class='chip ok'>" + fmt(q.points) + " pt · fastest " + q.bonusTop + " +" + fmt(q.bonus) + "</span></div>" +
+            (q.text ? "<div class='q-big'>" + esc(q.text) + "</div>" : "<div class='big-note'>Answer on your phone</div>") +
+            "<div class='opts-big'>" + tiles + "</div>" +
+            "<div style='display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:22px'>" +
+              "<div class='count-big' id='cd'>–</div>" +
+              "<div style='text-align:right'><div style='font-size:28px;font-weight:700' id='ansN'>0</div><div class='sub'>answered of <span id='memN'>0</span> joined</div></div>" +
+            "</div><div class='meter'><i id='ansBar' style='width:0'></i></div>" +
+            "<div class='row' style='margin-top:14px'><button class='btn primary' data-act='close'>Close now</button></div>";
+          updateOpenLive();
+        }
+        function updateOpenLive() {
+          var cd = $("cd"); if (!cd) return;
+          var q = S.live.question, left = Math.max(0, Math.ceil((q.endsAtMs - Date.now()) / 1000));
+          cd.textContent = left; cd.className = "count-big" + (left <= 5 ? " low" : "");
+          $("ansN").textContent = S.answersN; $("memN").textContent = Math.max(S.membersN, S.answersN);
+          $("ansBar").style.width = Math.min(100, S.answersN / Math.max(1, S.membersN, S.answersN) * 100) + "%";
+        }
+
+        function renderDone(st, q) {
+          var r = S.live.results;
+          if (q.status !== "revealed" || !r || r.qid !== q.id) { st.innerHTML = "<div class='stage-head'><span class='t'>Time's up</span></div><p class='sub'>Scoring…</p>"; return; }
+          var maxC = Math.max(1, Math.max.apply(null, LETTERS.slice(0, q.n).map(function (L) { return r.counts[L] || 0; })));
+          var bars = LETTERS.slice(0, q.n).map(function (L) {
+            var n = r.counts[L] || 0, isC = r.correct === "*" || r.correct === L;
+            return "<div class='bar-row'><div class='opt-letter'>" + L + "</div><div class='bar " + (isC ? "correct" : "") + "'><i style='width:" + (n / maxC * 100) + "%'></i></div><div class='n'>" + n + (isC ? " ✓" : "") + "</div></div>";
+          }).join("");
+          var fast = (r.fastest || []).map(function (f, i) {
+            return "<div class='li'><span class='rank'>" + (i + 1) + "</span><div class='who'><b>" + esc(f.n) + "</b><span>" + f.m + " · " + (f.ms / 1000).toFixed(1) + " s</span></div><span class='chip ok'>+" + fmt(f.pts) + "</span></div>";
+          }).join("") || "<p class='sub'>Nobody answered correctly.</p>";
+          st.innerHTML =
+            "<div class='stage-head'><span class='t'>Results</span><span class='chip " + (r.correct === "*" ? "none" : "ok") + "'>" + (r.correct === "*" ? "No wrong answers" : "Correct: " + r.correct) + "</span><span class='sub' style='margin-left:auto'>" + r.answered + " answered · " + r.right + " correct</span></div>" +
+            (q.text ? "<div class='q-big' style='font-size:clamp(20px,2.4vw,28px)'>" + esc(q.text) + "</div>" : "") +
+            bars +
+            "<h3 style='margin:18px 0 4px'>Fastest correct</h3>" + fast +
+            "<div class='row' style='margin-top:16px'><button class='btn primary' data-act='next'>Next question</button><button class='btn' data-act='board'>Show scores</button></div>";
+        }
+
+        function sortedScores() {
+          return S.cls.students.map(function (s) {
+            var x = S.scores[s.mssv] || {};
+            return { m: s.mssv, n: s.name, pts: +x.pts || 0, q: x.q || 0, c: x.c || 0 };
+          }).sort(function (a, b) { return b.pts - a.pts || a.n.localeCompare(b.n, "vi"); });
+        }
+        function renderBoard(st) {
+          var rows = sortedScores().slice(0, 20);
+          st.innerHTML = "<div class='stage-head'><span class='t'>Participation scores · today</span><button class='btn sm' style='margin-left:auto' data-act='back'>Back</button></div>" +
+            "<div class='board-grid'>" + rows.map(function (r, i) {
+              return "<div class='li'><span class='rank'>" + (i + 1) + "</span><div class='who'><b>" + esc(r.n) + "</b></div><span class='pts'>" + fmt(r.pts) + "</span></div>";
+            }).join("") + "</div>";
+        }
+
+        /* ---------------- side panels ---------------- */
+        var qrBuilt = "";
+        function renderSide() {
+          if (!S.cls) return;
+          var url = new URL("student.html?s=" + encodeURIComponent(S.sid), location.href).href;
+          var jc = $("joinCard");
+          if (qrBuilt !== url) {
+            jc.innerHTML = "<h3>Students join<span class='count' id='joinN'></span></h3><div class='join-qr'><div class='qrbox' id='qrbox'></div><div><div class='url'>" + esc(url.replace(/^https?:\/\//, "")) + "</div><div class='sub' style='margin-top:6px'>Scan with the phone camera, then type the student ID.</div></div></div>";
+            try { new QRCode($("qrbox"), { text: url, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { $("qrbox").textContent = "QR library not loaded"; }
+            qrBuilt = url;
+          }
+          $("joinN").textContent = S.membersN + " / " + S.cls.students.length + " joined";
+
+          var handsOpen = !S.live || S.live.handsOpen !== false;
+          $("handCard").innerHTML = "<h3>Hands<span class='count'>" + S.hands.length + "</span></h3>" +
+            "<div class='row' style='margin-bottom:6px'><button class='btn sm' data-act='handsToggle'>" + (handsOpen ? "Hand-raising: open" : "Hand-raising: closed") + "</button><span class='sub'>Call = +" + fmt(S.cfg.handPts) + " pt</span></div>" +
+            (S.hands.length ? S.hands.map(function (h, i) {
+              return "<div class='li'><span class='rank'>" + (i + 1) + "</span><div class='who'><b>" + esc(S.names[h.m] || h.n || h.m) + "</b><span>" + h.m + "</span></div><button class='btn sm primary' data-act='call' data-m='" + esc(h.m) + "'>Call</button><button class='mini' data-act='drop' data-m='" + esc(h.m) + "' aria-label='Remove'>×</button></div>";
+            }).join("") : "<p class='sub'>No raised hands.</p>");
+
+          var rows = sortedScores(), shown = S.showAll ? rows : rows.slice(0, 8);
+          $("scoreCard").innerHTML = "<h3>Scores today<span class='count'>" + rows.length + " students</span></h3>" +
+            shown.map(function (r, i) {
+              return "<div class='li'><span class='rank'>" + (i + 1) + "</span><div class='who'><b>" + esc(r.n) + "</b><span>" + r.m + " · " + r.c + "/" + r.q + " correct</span></div><button class='mini' data-act='adj' data-m='" + esc(r.m) + "' data-d='-0.5' aria-label='Minus half a point'>−</button><span class='pts'>" + fmt(r.pts) + "</span><button class='mini' data-act='adj' data-m='" + esc(r.m) + "' data-d='0.5' aria-label='Plus half a point'>+</button></div>";
+            }).join("") + (rows.length > 8 ? "<div class='row' style='margin-top:10px'><button class='btn sm' data-act='all'>" + (S.showAll ? "Show top 8" : "Show all " + rows.length) + "</button></div>" : "");
+
+          $("actCard").innerHTML = "<h3>Gradebook</h3><div class='row'><button class='btn sm' data-act='csv'>Export Excel (CSV)</button><button class='btn sm' data-act='copy'>Copy for Google Sheet</button></div>" +
+            "<div class='row' style='margin-top:12px'>" + (S.live && S.live.status === "ended" ? "" : "<button class='btn sm danger' data-act='end'>End session</button>") + "</div>";
+        }
+
+        /* ---------------- actions ---------------- */
+        function liveRef() { return S.db.collection("live").doc(S.sid); }
+        function partRef() { return S.db.collection("participation").doc(S.sid); }
+        function correctKey(qid) { return "qra:correct:" + S.sid + ":" + qid; }
+
+        function startQuestion() {
+          var c = S.cfg; if (!c.correct) return;
+          var qid = "q" + Date.now().toString(36);
+          try { sessionStorage.setItem(correctKey(qid), c.correct); } catch (e) {}
+          var q = { id: qid, text: c.text.trim(), n: c.n, durationSec: c.time, endsAtMs: Date.now() + c.time * 1000, status: "open", points: c.points, bonus: c.bonus, bonusTop: c.bonusTop, openedAt: FV.serverTimestamp() };
+          S.closing = false;
+          liveRef().update({ question: q, results: null }).catch(function (e) { fail(e, "Cannot start the question"); });
+        }
+        function scoreChunks(entries) {
+          var all = Object.keys(entries), p = Promise.resolve();
+          for (var i = 0; i < all.length; i += 60) (function (keys) {
+            var scores = {}; keys.forEach(function (m) { scores[m] = entries[m]; });
+            p = p.then(function () { return partRef().set({ scores: scores }, { merge: true }); });
+          })(all.slice(i, i + 60));
+          return p;
+        }
+        function closeQuestion() {
+          var q = S.live && S.live.question; if (!q || q.status !== "open" || S.closing) return;
+          S.closing = true;
+          var correct = null; try { correct = sessionStorage.getItem(correctKey(q.id)); } catch (e) {}
+          if (!correct) { correct = (window.prompt("Which answer was correct? (A–E, or * for any)", "A") || "*").toUpperCase(); }
+          var ref = liveRef(), opened = q.openedAt && q.openedAt.toMillis ? q.openedAt.toMillis() : (q.endsAtMs - q.durationSec * 1000);
+          ref.update({ "question.status": "closed" }).then(function () {
+            return ref.collection("answers").where("qid", "==", q.id).get();
+          }).then(function (snap) {
+            var rows = [], counts = {};
+            snap.forEach(function (d) {
+              var x = d.data(); if (!S.names[x.mssv]) return;
+              var ms = x.t && x.t.toMillis ? x.t.toMillis() - opened : q.durationSec * 1000;
+              rows.push({ m: x.mssv, c: x.choice, ms: Math.max(0, ms) });
+              counts[x.choice] = (counts[x.choice] || 0) + 1;
+            });
+            var right = rows.filter(function (r) { return correct === "*" || r.c === correct; }).sort(function (a, b) { return a.ms - b.ms; });
+            var awards = {}, entries = {}, fastest = [];
+            rows.forEach(function (r) { awards[r.m] = { pts: 0, rank: null, ms: r.ms, ok: false }; entries[r.m] = { q: FV.increment(1), c: FV.increment(0), pts: FV.increment(0) }; });
+            right.forEach(function (r, i) {
+              var bonus = i < q.bonusTop ? q.bonus : 0, pts = q.points + bonus;
+              awards[r.m] = { pts: pts, rank: i < q.bonusTop ? i + 1 : null, ms: r.ms, ok: true };
+              entries[r.m] = { q: FV.increment(1), c: FV.increment(1), pts: FV.increment(pts) };
+              if (i < Math.max(q.bonusTop, 3)) fastest.push({ m: r.m, n: S.names[r.m], ms: r.ms, pts: pts });
+            });
+            return scoreChunks(entries).then(function () {
+              return ref.update({ "question.status": "revealed", results: { qid: q.id, correct: correct, counts: counts, answered: rows.length, right: right.length, awards: awards, fastest: fastest } });
+            });
+          }).catch(function (e) { S.closing = false; fail(e, "Scoring failed"); });
+        }
+        function nextQuestion() { S.cfg.text = ""; S.cfg.correct = null; S.view = "main"; liveRef().update({ question: null, results: null }).catch(function (e) { fail(e); }); }
+        function incScore(m, d, extra) {
+          var e = { pts: FV.increment(d) }; for (var k in extra) e[k] = extra[k];
+          var sc = {}; sc[m] = e; return partRef().set({ scores: sc }, { merge: true });
+        }
+        function callHand(m) {
+          var pts = S.cfg.handPts;
+          incScore(m, pts, { h: FV.increment(1) }).then(function () {
+            return Promise.all([liveRef().collection("hands").doc(m).delete(), liveRef().update({ called: { m: m, n: S.names[m] || m, pts: pts, seq: Date.now() } })]);
+          }).catch(function (e) { fail(e, "Cannot call"); });
+        }
+        function csvData() {
+          return S.db.collection("participation").where("classId", "==", S.cls.id).get().then(function (snap) {
+            var days = []; snap.forEach(function (d) { days.push({ date: d.data().date || d.id.split("_").pop(), scores: d.data().scores || {} }); });
+            days.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+            var head = ["MSSV", "Họ tên"].concat(days.map(function (d) { return d.date; }), ["Tổng điểm chuyên cần"]);
+            var rows = S.cls.students.slice().sort(function (a, b) { return a.mssv < b.mssv ? -1 : 1; }).map(function (s) {
+              var vals = days.map(function (d) { return Math.round(((d.scores[s.mssv] || {}).pts || 0) * 100) / 100; });
+              var tot = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) * 100) / 100;
+              return [s.mssv, s.name].concat(vals, [tot]);
+            });
+            return [head].concat(rows);
+          });
+        }
+        function exportCsv() {
+          csvData().then(function (rows) {
+            var csv = rows.map(function (r) { return r.map(function (v) { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\r\n");
+            var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+            var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+            a.download = "chuyen-can-" + S.cls.name.replace(/[^\w-]+/g, "_") + ".csv"; document.body.appendChild(a); a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+            QR.toast("Downloaded — opens in Excel.");
+          }).catch(function (e) { fail(e, "Export failed"); });
+        }
+        function copySheet() {
+          csvData().then(function (rows) {
+            var tsv = rows.map(function (r) { return r.join("\t"); }).join("\n");
+            return navigator.clipboard.writeText(tsv).then(function () { QR.toast("Copied — paste into Google Sheets."); });
+          }).catch(function (e) { fail(e, "Copy failed"); });
+        }
+
+        /* ---------------- events ---------------- */
+        document.addEventListener("click", function (ev) {
+          var b = ev.target.closest("[data-act]"); if (!b || !S.cls) return;
+          var act = b.getAttribute("data-act"), v = b.getAttribute("data-v"), m = b.getAttribute("data-m");
+          if (act === "n") { S.cfg.n = +v; if (LETTERS.indexOf(S.cfg.correct) >= +v) S.cfg.correct = null; saveCfg(); renderStage(); }
+          else if (act === "correct") { S.cfg.correct = v; renderStage(); }
+          else if (act === "time") { S.cfg.time = +v; saveCfg(); renderStage(); }
+          else if (act === "start") startQuestion();
+          else if (act === "close") closeQuestion();
+          else if (act === "next") nextQuestion();
+          else if (act === "board") { S.view = "board"; renderStage(); }
+          else if (act === "back") { S.view = "main"; renderStage(); }
+          else if (act === "handsToggle") liveRef().update({ handsOpen: !(S.live && S.live.handsOpen !== false) }).catch(fail);
+          else if (act === "call") callHand(m);
+          else if (act === "drop") liveRef().collection("hands").doc(m).delete().catch(fail);
+          else if (act === "adj") incScore(m, parseFloat(b.getAttribute("data-d")), { adj: FV.increment(1) }).catch(function (e) { fail(e); });
+          else if (act === "all") { S.showAll = !S.showAll; renderSide(); }
+          else if (act === "csv") exportCsv();
+          else if (act === "copy") copySheet();
+          else if (act === "end") { if (confirm("End today's session? Students will see it is over. Scores are kept.")) liveRef().update({ status: "ended" }).catch(fail); }
+          else if (act === "reopen") liveRef().update({ status: "active" }).catch(fail);
+        });
+        function tick() {
+          var q = S.live && S.live.question;
+          if (phase() === "open") { updateOpenLive(); if (Date.now() >= q.endsAtMs + 300) closeQuestion(); }
+        }
+
+        boot();
+      })();
+    </script>
+  </body>
+</html>
